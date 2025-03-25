@@ -109,7 +109,7 @@ const ConsumptionChart: React.FC<ConsumptionChartProps> = ({ data, className }) 
                   key={metric.value}
                   value={metric.value}
                   aria-label={metric.label}
-                  pressed={selectedMetrics.includes(metric.value as ChartMetric)}
+                  data-state={selectedMetrics.includes(metric.value as ChartMetric) ? "on" : "off"}
                   onClick={() => handleMetricToggle(metric.value as ChartMetric)}
                   className="text-xs px-2.5 py-1"
                 >
