@@ -23,7 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 type TimeRange = 'hour' | '12hours' | 'day' | 'week' | 'month';
 type ChartType = 'area' | 'line';
-type ChartMetric = 'activePower' | 'voltage' | 'current' | 'powerFactor';
+type ChartMetric = 'activePower' | 'voltage' | 'current' | 'powerFactor' | 'carbonEmissions' | 'cbamFactor' | 'humidity';
 
 interface ConsumptionChartProps {
   data: EnergyMeasurement[];
@@ -40,6 +40,9 @@ const metricOptions: {
   { value: 'voltage', label: 'Voltage', color: '#FFD60A', unit: 'V' },
   { value: 'current', label: 'Current', color: '#FF453A', unit: 'A' },
   { value: 'powerFactor', label: 'Power Factor', color: '#30D158', unit: '' },
+  { value: 'carbonEmissions', label: 'Carbon Emissions', color: '#BF5AF2', unit: 'kgCO2e' },
+  { value: 'cbamFactor', label: 'CBAM Factor', color: '#FF9F0A', unit: '€/ton' },
+  { value: 'humidity', label: 'Humidity', color: '#64D2FF', unit: '%' },
 ];
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
@@ -63,7 +66,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 const ConsumptionChart: React.FC<ConsumptionChartProps> = ({ data, className }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('day');
   const [chartType, setChartType] = useState<ChartType>('area');
-  const [selectedMetrics, setSelectedMetrics] = useState<ChartMetric[]>(['activePower', 'voltage']);
+  const [selectedMetrics, setSelectedMetrics] = useState<ChartMetric[]>(['activePower', 'carbonEmissions']);
 
   // Filter data based on time range
   const filteredData = useMemo(() => {
@@ -83,7 +86,10 @@ const ConsumptionChart: React.FC<ConsumptionChartProps> = ({ data, className }) 
 
   // Prepare data for charting
   const chartData = useMemo(() => {
-    return prepareChartData(aggregatedData, ['timestamp', 'activePower', 'voltage', 'current', 'powerFactor']);
+    return prepareChartData(aggregatedData, [
+      'timestamp', 'activePower', 'voltage', 'current', 'powerFactor', 
+      'carbonEmissions', 'cbamFactor', 'humidity'
+    ]);
   }, [aggregatedData]);
 
   const handleMetricToggle = (metric: ChartMetric) => {
@@ -100,7 +106,7 @@ const ConsumptionChart: React.FC<ConsumptionChartProps> = ({ data, className }) 
     <Card className={className}>
       <CardHeader className="px-6 pt-6 pb-0">
         <div className="flex flex-wrap justify-between items-center gap-4">
-          <CardTitle>Energy Consumption</CardTitle>
+          <CardTitle>Rice Plant Energy & CBAM Metrics</CardTitle>
           
           <div className="flex flex-wrap items-center gap-2">
             <ToggleGroup type="multiple" variant="outline" className="hidden md:flex">

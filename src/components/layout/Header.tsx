@@ -1,16 +1,19 @@
+
 import React from 'react';
-import { BellIcon, Settings } from 'lucide-react';
+import { BellIcon, Settings, Wheat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 const Header: React.FC = () => {
   return <header className="w-full bg-white/80 backdrop-blur-md z-10 border-b border-border sticky top-0 animate-fade-in">
       <div className="container h-16 flex items-center justify-between px-4 md:px-6">
         <div className="flex items-center space-x-2">
-          <h1 className="text-xl font-medium">Energy Demo</h1>
+          <Wheat className="h-5 w-5 text-green-600" />
+          <h1 className="text-xl font-medium">Rice Plant Energy Analytics</h1>
           <div className="h-5 w-[1px] bg-border mx-2 hidden md:block" />
           <span className="text-sm text-muted-foreground hidden md:block">
-            Dashboard
+            CBAM Dashboard
           </span>
         </div>
         
@@ -31,7 +34,7 @@ const Header: React.FC = () => {
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Preferences</DropdownMenuItem>
-              <DropdownMenuItem>Alerts</DropdownMenuItem>
+              <DropdownMenuItem>CBAM Reports</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Sign out</DropdownMenuItem>
             </DropdownMenuContent>
@@ -39,10 +42,10 @@ const Header: React.FC = () => {
           
           <div className="hidden md:flex items-center space-x-2 pl-1">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-energy-blue text-white">EA</AvatarFallback>
+              <AvatarFallback className="bg-green-600 text-white">RP</AvatarFallback>
             </Avatar>
             <div className="hidden md:block">
-              <p className="text-sm font-medium">Admin</p>
+              <p className="text-sm font-medium">Rice Admin</p>
             </div>
           </div>
         </div>

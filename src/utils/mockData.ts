@@ -1,5 +1,4 @@
-
-// Mock data for energy analytics demo
+// Mock data for rice plant energy analytics with CBAM integration
 export interface EnergyMeasurement {
   timestamp: string;
   voltage: number;
@@ -11,6 +10,10 @@ export interface EnergyMeasurement {
   frequency: number;
   energy: number;
   temperature: number;
+  // New CBAM-related properties
+  carbonEmissions?: number;
+  cbamFactor?: number;
+  humidity?: number;
 }
 
 export interface ConsumptionPoint {
@@ -108,6 +111,11 @@ const generateMeasurements = (hours: number, type: 'production' | 'office' | 'ut
   const frequencySeries = generateTimeSeries(hours, 50, 0.5, 'fluctuating');
   const temperatureSeries = generateTimeSeries(hours, 25, 3, 'fluctuating');
   
+  // New CBAM-related time series
+  const carbonEmissionsSeries = generateTimeSeries(hours, 42.5, 8, 'fluctuating');
+  const cbamFactorSeries = generateTimeSeries(hours, 75.2, 5, 'increasing');
+  const humiditySeries = generateTimeSeries(hours, 68, 7, 'fluctuating');
+  
   return timestamps.map((timestamp, index) => {
     const voltage = voltageSeries[index];
     const current = currentSeries[index];
@@ -126,7 +134,11 @@ const generateMeasurements = (hours: number, type: 'production' | 'office' | 'ut
       powerFactor,
       frequency: frequencySeries[index],
       energy: +(activePower * (5 / 60) / 1000).toFixed(3), // kWh for 5 minutes
-      temperature: temperatureSeries[index]
+      temperature: temperatureSeries[index],
+      // Add new CBAM-related properties
+      carbonEmissions: carbonEmissionsSeries[index],
+      cbamFactor: cbamFactorSeries[index],
+      humidity: humiditySeries[index]
     };
   });
 };
@@ -224,8 +236,8 @@ const generateRecommendations = (consumptionPoints: ConsumptionPoint[]): Optimiz
       id: 'rec-2',
       consumptionPointId: 'cp-2',
       category: 'scheduling',
-      title: 'Optimize HVAC Operating Schedule',
-      description: 'Adjust HVAC startup/shutdown times based on building occupancy',
+      title: 'Optimize Rice Drying Schedule',
+      description: 'Adjust drying times based on ambient humidity and temperature',
       potentialSavings: 8200,
       implementationCost: 'low',
       priority: 'medium'
@@ -234,8 +246,8 @@ const generateRecommendations = (consumptionPoints: ConsumptionPoint[]): Optimiz
       id: 'rec-3',
       consumptionPointId: 'cp-3',
       category: 'maintenance',
-      title: 'Compressed Air System Leak Repair',
-      description: 'Fix identified leaks in the compressed air distribution system',
+      title: 'Hulling Machine Optimization',
+      description: 'Adjust and maintain hulling equipment for optimal performance',
       potentialSavings: 4300,
       implementationCost: 'low',
       priority: 'high'
@@ -244,7 +256,7 @@ const generateRecommendations = (consumptionPoints: ConsumptionPoint[]): Optimiz
       id: 'rec-4',
       consumptionPointId: 'cp-4',
       category: 'replacement',
-      title: 'Upgrade Office Lighting to LED',
+      title: 'Upgrade Facility Lighting to LED',
       description: 'Replace fluorescent fixtures with LED panels with daylight sensors',
       potentialSavings: 5600,
       implementationCost: 'medium',
@@ -254,8 +266,8 @@ const generateRecommendations = (consumptionPoints: ConsumptionPoint[]): Optimiz
       id: 'rec-5',
       consumptionPointId: 'cp-1',
       category: 'efficiency',
-      title: 'VFD Installation on Process Pumps',
-      description: 'Install variable frequency drives on constant-flow pump systems',
+      title: 'CBAM Cost Reduction Strategy',
+      description: 'Implement carbon reduction measures to reduce CBAM fees',
       potentialSavings: 18900,
       implementationCost: 'high',
       priority: 'high'
@@ -270,31 +282,31 @@ export const generateConsumptionPoints = (hours: number = 24): ConsumptionPoint[
   const consumptionPoints: ConsumptionPoint[] = [
     {
       id: 'cp-1',
-      name: 'Production Line A',
-      location: 'Manufacturing Floor',
+      name: 'Rice Processing Line',
+      location: 'Main Production Floor',
       category: 'production',
       measurements: generateMeasurements(hours, 'production')
     },
     {
       id: 'cp-2',
-      name: 'Main Office Building',
-      location: 'Administrative Zone',
-      category: 'office',
-      measurements: generateMeasurements(hours, 'office')
+      name: 'Rice Drying Facility',
+      location: 'Eastern Wing',
+      category: 'production',
+      measurements: generateMeasurements(hours, 'production')
     },
     {
       id: 'cp-3',
-      name: 'Compressed Air System',
-      location: 'Utility Room',
-      category: 'utility',
-      measurements: generateMeasurements(hours, 'utility')
+      name: 'Hulling and Polishing',
+      location: 'Western Wing',
+      category: 'production',
+      measurements: generateMeasurements(hours, 'production')
     },
     {
       id: 'cp-4',
-      name: 'Central HVAC',
-      location: 'Rooftop',
-      category: 'hvac',
-      measurements: generateMeasurements(hours, 'hvac')
+      name: 'Packaging Facility',
+      location: 'Southern Wing',
+      category: 'production',
+      measurements: generateMeasurements(hours, 'production')
     }
   ];
   
@@ -349,6 +361,24 @@ export const calculateSummaryMetrics = (consumptionPoints: ConsumptionPoint[]) =
   // Calculate losses (10-15% of active power as an estimate)
   const technicalLosses = avgActivePower * 0.12;
   
+  // Calculate CBAM-related metrics
+  let totalCarbonEmissions = 0;
+  let totalCbamFactor = 0;
+  let totalHumidity = 0;
+  
+  consumptionPoints.forEach(point => {
+    const latestMeasurements = point.measurements.slice(-12); // Last hour
+    latestMeasurements.forEach(m => {
+      if (m.carbonEmissions) totalCarbonEmissions += m.carbonEmissions;
+      if (m.cbamFactor) totalCbamFactor += m.cbamFactor;
+      if (m.humidity) totalHumidity += m.humidity;
+    });
+  });
+  
+  const avgCarbonEmissions = measurementCount > 0 ? totalCarbonEmissions / measurementCount : 0;
+  const avgCbamFactor = measurementCount > 0 ? totalCbamFactor / measurementCount : 0;
+  const avgHumidity = measurementCount > 0 ? totalHumidity / measurementCount : 0;
+  
   return {
     hourlyEnergy: +hourlyEnergy.toFixed(2),
     avgActivePower: +avgActivePower.toFixed(2),
@@ -356,12 +386,15 @@ export const calculateSummaryMetrics = (consumptionPoints: ConsumptionPoint[]) =
     systemPowerFactor: +systemPowerFactor.toFixed(2),
     avgSystemVoltage: +avgSystemVoltage.toFixed(1),
     technicalLosses: +technicalLosses.toFixed(2),
+    avgCarbonEmissions: +avgCarbonEmissions.toFixed(2),
+    avgCbamFactor: +avgCbamFactor.toFixed(2),
+    avgHumidity: +avgHumidity.toFixed(1),
     consumptionBreakdown: {
-      production: 68,
-      hvac: 15,
-      lighting: 8,
-      utility: 7,
-      other: 2
+      processing: 45,
+      drying: 25,
+      hulling: 15,
+      packaging: 10,
+      other: 5
     }
   };
 };

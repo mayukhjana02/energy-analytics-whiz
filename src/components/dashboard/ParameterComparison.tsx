@@ -35,6 +35,9 @@ const parameters = [
   { id: 'powerFactor', name: 'Power Factor', unit: '' },
   { id: 'energy', name: 'Energy', unit: 'kWh' },
   { id: 'temperature', name: 'Temperature', unit: '°C' },
+  { id: 'carbonEmissions', name: 'Carbon Emissions', unit: 'kgCO2e' },
+  { id: 'cbamFactor', name: 'CBAM Factor', unit: '€/ton' },
+  { id: 'humidity', name: 'Humidity', unit: '%' },
 ];
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -76,7 +79,7 @@ const ParameterComparison: React.FC<ParameterComparisonProps> = ({ data, classNa
     <Card className={className}>
       <CardHeader className="px-6 pt-6 pb-0">
         <div className="flex flex-wrap justify-between items-center gap-4">
-          <CardTitle>Parameter Correlation</CardTitle>
+          <CardTitle>Rice Plant Parameter Correlation</CardTitle>
           
           <div className="flex items-center space-x-2">
             <div className="flex items-center gap-2">
@@ -163,7 +166,7 @@ const ParameterComparison: React.FC<ParameterComparisonProps> = ({ data, classNa
             <Scatter 
               name="Parameters" 
               data={scatterData} 
-              fill="#0A84FF" 
+              fill="#4CAF50" 
               fillOpacity={0.6}
             />
           </ScatterChart>
