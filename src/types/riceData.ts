@@ -18,9 +18,38 @@ export type RiceMetricTagId =
   | 'WHITE_RICE_TPH'
   | 'WHITE_RICE_TOT'
   | 'ENERGY_AMPS'
-  | 'ENERGY_KWH';
+  | 'ENERGY_KWH'
+  | 'VIBRATION_LEVEL'
+  | 'ROLLER_RPM'
+  | 'MACHINE_TEMP'
+  | 'FRICTION_COEFFICIENT'
+  | 'PRESSURE_LEVEL'
+  | 'MOTOR_TORQUE';
 
 export interface RiceProductionData {
   metrics: RiceProductionMetric[];
+  lastUpdated: string;
+}
+
+export interface PhysicsParameters {
+  frictionCoefficient: number;
+  rollerSpeed: number;
+  pressureLevel: number;
+  vibrationLevel: number;
+  motorTorque: number;
+  temperature: number;
+  humidity: number;
+  airResistance: number;
+  particleDensity: number;
+  grainMoisture: number;
+}
+
+export interface MachineEfficiency {
+  id: string;
+  name: string;
+  currentEfficiency: number;
+  optimalEfficiency: number;
+  physicsParams: PhysicsParameters;
+  recommendations: string[];
   lastUpdated: string;
 }
