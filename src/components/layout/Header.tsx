@@ -10,7 +10,7 @@ const Header: React.FC = () => {
       <div className="container h-16 flex items-center justify-between px-4 md:px-6">
         <div className="flex items-center space-x-2">
           <Wheat className="h-5 w-5 text-green-600" />
-          <h1 className="text-xl font-medium">Rice Plant Energy Analytics</h1>
+          <h1 className="text-xl font-medium">Energy Demo</h1>
           <div className="h-5 w-[1px] bg-border mx-2 hidden md:block" />
           <span className="text-sm text-muted-foreground hidden md:block">
             CBAM Dashboard
@@ -42,10 +42,10 @@ const Header: React.FC = () => {
           
           <div className="hidden md:flex items-center space-x-2 pl-1">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-green-600 text-white">RP</AvatarFallback>
+              <AvatarFallback className="bg-green-600 text-white">ED</AvatarFallback>
             </Avatar>
             <div className="hidden md:block">
-              <p className="text-sm font-medium">Rice Admin</p>
+              <p className="text-sm font-medium">Energy Admin</p>
             </div>
           </div>
         </div>

@@ -4,6 +4,14 @@ import { BatteryIcon, BoltIcon, GaugeIcon, ZapIcon } from 'lucide-react';
 import MetricCard from '../ui/MetricCard';
 import { Card } from '@/components/ui/card';
 
+interface AdditionalMetric {
+  title: string;
+  value: number;
+  unit: string;
+  change: number;
+  trend: 'up' | 'down' | 'neutral';
+}
+
 interface EnergyOverviewProps {
   data: {
     hourlyEnergy: number;
@@ -12,6 +20,7 @@ interface EnergyOverviewProps {
     systemPowerFactor: number;
     avgSystemVoltage: number;
     technicalLosses: number;
+    additionalMetrics?: AdditionalMetric[];
   };
 }
 
@@ -53,6 +62,17 @@ const EnergyOverview: React.FC<EnergyOverviewProps> = ({ data }) => {
         description="Average voltage level across the system"
         trend={{ value: 0.2, direction: 'down' }}
       />
+
+      {data.additionalMetrics && data.additionalMetrics.map((metric, index) => (
+        <MetricCard
+          key={`additional-metric-${index}`}
+          title={metric.title}
+          value={metric.value}
+          unit={metric.unit}
+          description=""
+          trend={{ value: metric.change, direction: metric.trend }}
+        />
+      ))}
     </div>
   );
 };

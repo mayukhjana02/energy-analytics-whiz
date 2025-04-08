@@ -7,11 +7,15 @@ import ConsumptionChart from '@/components/dashboard/ConsumptionChart';
 import ParameterComparison from '@/components/dashboard/ParameterComparison';
 import TechnicalLosses from '@/components/dashboard/TechnicalLosses';
 import EnergyIncidents from '@/components/dashboard/EnergyIncidents';
+import RiceProductionTable from '@/components/dashboard/RiceProductionTable';
 import { mockData, summaryMetrics, generateMockData } from '@/utils/mockData';
+import { initialRiceProductionData, generateUpdatedRiceData, createRiceMetricsData } from '@/utils/riceProductionData';
+import { RiceProductionMetric } from '@/types/riceData';
 import { toast } from 'sonner';
 
 const Index = () => {
   const [data, setData] = useState(mockData);
+  const [riceData, setRiceData] = useState<RiceProductionMetric[]>(initialRiceProductionData);
   const [metrics, setMetrics] = useState({
     ...summaryMetrics,
     // Add CBAM-specific metrics
@@ -26,19 +30,23 @@ const Index = () => {
     // Simulate data loading
     const timer = setTimeout(() => {
       setLoading(false);
-      toast.success('Rice plant energy data loaded successfully');
+      toast.success('Energy demo data loaded successfully');
     }, 800);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Simulate a data refresh every minute
+  // Simulate a data refresh every 30 seconds
   useEffect(() => {
     const refreshInterval = setInterval(() => {
       const refreshedData = generateMockData();
       setData(refreshedData);
-      toast.info('Rice plant energy data refreshed');
-    }, 60000); // 1 minute
+      
+      // Update rice production data
+      setRiceData(prevData => generateUpdatedRiceData(prevData));
+      
+      toast.info('Energy data refreshed');
+    }, 30000); // 30 seconds
 
     return () => clearInterval(refreshInterval);
   }, []);
@@ -50,6 +58,9 @@ const Index = () => {
     return <div>Error loading data</div>;
   }
 
+  // Create rice metrics for display
+  const riceMetrics = createRiceMetricsData(riceData);
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar />
@@ -60,9 +71,9 @@ const Index = () => {
         <main className="flex-1 overflow-y-auto pb-8">
           <div className="container px-4 py-6 max-w-7xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-semibold mb-2 tracking-tight section-fade">Rice Plant Energy & CBAM Analytics</h1>
+              <h1 className="text-3xl font-semibold mb-2 tracking-tight section-fade">Energy Demo</h1>
               <p className="text-muted-foreground section-fade" style={{ animationDelay: '100ms' }}>
-                Monitor energy consumption, carbon emissions, and CBAM impact for rice processing operations.
+                Monitor energy consumption, rice production metrics, and CBAM impact for rice processing operations.
               </p>
             </div>
             
@@ -71,36 +82,7 @@ const Index = () => {
               <div className="section-fade" style={{ animationDelay: '200ms' }}>
                 <EnergyOverview data={{
                   ...metrics,
-                  additionalMetrics: [
-                    {
-                      title: "CBAM Factor",
-                      value: metrics.cbamFactor,
-                      unit: "€/ton",
-                      change: +2.3,
-                      trend: "up"
-                    },
-                    {
-                      title: "Carbon Emissions",
-                      value: metrics.carbonEmissions,
-                      unit: "kgCO2e/ton",
-                      change: -1.8,
-                      trend: "down"
-                    },
-                    {
-                      title: "CBAM Cost",
-                      value: metrics.cbamCost,
-                      unit: "€",
-                      change: +5.2,
-                      trend: "up"
-                    },
-                    {
-                      title: "Humidity",
-                      value: metrics.humidityLevel,
-                      unit: "%",
-                      change: +0.5,
-                      trend: "neutral"
-                    }
-                  ]
+                  additionalMetrics: riceMetrics
                 }} />
               </div>
               
@@ -108,6 +90,11 @@ const Index = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '300ms' }}>
                 <ConsumptionChart data={mainConsumptionPoint.measurements} />
                 <ParameterComparison data={mainConsumptionPoint.measurements} />
+              </div>
+              
+              {/* Rice Production Data Table */}
+              <div className="section-fade" style={{ animationDelay: '350ms' }}>
+                <RiceProductionTable data={riceData} />
               </div>
               
               {/* Technical Losses & Energy Incidents */}
