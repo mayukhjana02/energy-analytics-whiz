@@ -304,7 +304,11 @@ const ConsumptionAnalytics: React.FC = () => {
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
                           <YAxis />
-                          <Tooltip formatter={(value, name) => [`${value.toFixed(1)}`, name]} />
+                          <Tooltip formatter={(value, name) => {
+                            // Check if value is a number before using toFixed
+                            const formattedValue = typeof value === 'number' ? value.toFixed(1) : value;
+                            return [formattedValue, name];
+                          }} />
                           <Legend />
                           <Bar dataKey="actual" fill="#8884d8" name="Actual" />
                           <Bar dataKey="theoretical" fill="#82ca9d" name="Theoretical Optimal" />
@@ -359,13 +363,19 @@ const ConsumptionAnalytics: React.FC = () => {
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="value"
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) => {
+                              // Ensure percent is treated as a number
+                              const percentValue = typeof percent === 'number' ? percent : 0;
+                              return `${name}: ${(percentValue * 100).toFixed(0)}%`;
+                            }}
                           >
                             {getProductionEfficiencyData().map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip />
+                          <Tooltip formatter={(value) => {
+                            return typeof value === 'number' ? value.toFixed(2) : value;
+                          }} />
                         </PieChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -448,13 +458,19 @@ const ConsumptionAnalytics: React.FC = () => {
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="value"
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) => {
+                              // Ensure percent is treated as a number
+                              const percentValue = typeof percent === 'number' ? percent : 0;
+                              return `${name}: ${(percentValue * 100).toFixed(0)}%`;
+                            }}
                           >
                             {getProductionEfficiencyData().map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip />
+                          <Tooltip formatter={(value) => {
+                            return typeof value === 'number' ? value.toFixed(2) : value;
+                          }} />
                         </PieChart>
                       </ResponsiveContainer>
                     </CardContent>
