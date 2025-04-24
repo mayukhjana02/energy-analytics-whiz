@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import EnergyOverview from '@/components/dashboard/EnergyOverview';
@@ -8,42 +8,58 @@ import ParameterComparison from '@/components/dashboard/ParameterComparison';
 import TechnicalLosses from '@/components/dashboard/TechnicalLosses';
 import EnergyIncidents from '@/components/dashboard/EnergyIncidents';
 import RiceProductionTable from '@/components/dashboard/RiceProductionTable';
-import { useEnergyData } from '@/hooks/useEnergyData';
+import { mockData, summaryMetrics, generateMockData } from '@/utils/mockData';
+import { initialRiceProductionData, generateUpdatedRiceData, createRiceMetricsData } from '@/utils/riceProductionData';
+import { RiceProductionMetric } from '@/types/riceData';
+import { toast } from 'sonner';
 
 const Index = () => {
-  const { metrics, incidents, optimizations, isLoading } = useEnergyData();
+  const [data, setData] = useState(mockData);
+  const [riceData, setRiceData] = useState<RiceProductionMetric[]>(initialRiceProductionData);
+  const [metrics, setMetrics] = useState({
+    ...summaryMetrics,
+    // Add CBAM-specific metrics
+    cbamFactor: 75.2, // €/ton
+    carbonEmissions: 42.5, // kgCO2e/ton
+    cbamCost: 3197, // € (monthly)
+    humidityLevel: 68, // % optimal for rice processing
+  });
+  const [loading, setLoading] = useState(true);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Loading energy data...</h2>
-          <p className="text-muted-foreground">Please wait while we fetch the latest metrics</p>
-        </div>
-      </div>
-    );
+  useEffect(() => {
+    // Simulate data loading
+    const timer = setTimeout(() => {
+      setLoading(false);
+      toast.success('Energy demo data loaded successfully');
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Simulate a data refresh every 30 seconds
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      const refreshedData = generateMockData();
+      setData(refreshedData);
+      
+      // Update rice production data
+      setRiceData(prevData => generateUpdatedRiceData(prevData));
+      
+      toast.info('Energy data refreshed');
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  // Select data for the main consumption point (Rice Processing Line)
+  const mainConsumptionPoint = data.consumptionPoints.find(cp => cp.id === 'cp-1');
+
+  if (!mainConsumptionPoint) {
+    return <div>Error loading data</div>;
   }
 
-  // Find energy-related metrics
-  const energyMetrics = metrics?.filter(m => 
-    ['ENERGY_KWH', 'ENERGY_AMPS'].includes(m.tag_id)) || [];
-
-  // Calculate summary metrics
-  const avgActivePower = energyMetrics.find(m => m.tag_id === 'ENERGY_AMPS')?.value || 0;
-  const hourlyEnergy = energyMetrics.find(m => m.tag_id === 'ENERGY_KWH')?.value || 0;
-
-  const summaryMetrics = {
-    hourlyEnergy,
-    avgActivePower,
-    avgReactivePower: avgActivePower * 0.4, // Estimated
-    systemPowerFactor: 0.92,
-    avgSystemVoltage: 220,
-    technicalLosses: 5.2,
-    cbamFactor: 75.2,
-    carbonEmissions: 42.5,
-    cbamCost: 3197,
-    humidityLevel: 68,
-  };
+  // Create rice metrics for display
+  const riceMetrics = createRiceMetricsData(riceData);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -55,32 +71,39 @@ const Index = () => {
         <main className="flex-1 overflow-y-auto pb-8">
           <div className="container px-4 py-6 max-w-7xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-semibold mb-2 tracking-tight section-fade">KRBL Energy Demo</h1>
-              <p className="text-muted-foreground section-fade">
-                Real-time energy monitoring and optimization for rice processing operations
+              <h1 className="text-3xl font-semibold mb-2 tracking-tight section-fade">Energy Demo</h1>
+              <p className="text-muted-foreground section-fade" style={{ animationDelay: '100ms' }}>
+                Monitor energy consumption, rice production metrics, and CBAM impact for rice processing operations.
               </p>
             </div>
             
             <div className="space-y-6">
+              {/* Energy Overview with CBAM metrics */}
               <div className="section-fade" style={{ animationDelay: '200ms' }}>
-                <EnergyOverview data={summaryMetrics} />
+                <EnergyOverview data={{
+                  ...metrics,
+                  additionalMetrics: riceMetrics
+                }} />
               </div>
               
+              {/* Main charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '300ms' }}>
-                <ConsumptionChart data={energyMetrics} />
-                <ParameterComparison data={metrics || []} />
+                <ConsumptionChart data={mainConsumptionPoint.measurements} />
+                <ParameterComparison data={mainConsumptionPoint.measurements} />
               </div>
               
+              {/* Rice Production Data Table */}
               <div className="section-fade" style={{ animationDelay: '350ms' }}>
-                <RiceProductionTable data={metrics || []} />
+                <RiceProductionTable data={riceData} />
               </div>
               
+              {/* Technical Losses & Energy Incidents */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '400ms' }}>
                 <TechnicalLosses
-                  data={metrics || []}
-                  totalActivePower={avgActivePower}
+                  data={mainConsumptionPoint.measurements}
+                  totalActivePower={metrics.avgActivePower}
                 />
-                <EnergyIncidents incidents={incidents || []} />
+                <EnergyIncidents incidents={data.incidents} />
               </div>
             </div>
           </div>

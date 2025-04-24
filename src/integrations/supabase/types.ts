@@ -9,69 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      energy_incidents: {
-        Row: {
-          created_at: string
-          description: string
-          id: string
-          machine_id: string
-          resolved_at: string | null
-          severity: string
-          status: string
-          title: string
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          id?: string
-          machine_id: string
-          resolved_at?: string | null
-          severity: string
-          status: string
-          title: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          id?: string
-          machine_id?: string
-          resolved_at?: string | null
-          severity?: string
-          status?: string
-          title?: string
-        }
-        Relationships: []
-      }
-      energy_metrics: {
-        Row: {
-          created_at: string
-          id: string
-          machine_id: string
-          measurement_time: string
-          tag_id: string
-          unit: string
-          value: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          machine_id: string
-          measurement_time?: string
-          tag_id: string
-          unit: string
-          value: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          machine_id?: string
-          measurement_time?: string
-          tag_id?: string
-          unit?: string
-          value?: number
-        }
-        Relationships: []
-      }
       exam_attempts: {
         Row: {
           created_at: string
@@ -152,42 +89,6 @@ export type Database = {
           name?: string
           passing_percentage?: number
           updated_at?: string
-        }
-        Relationships: []
-      }
-      machine_optimizations: {
-        Row: {
-          applied_at: string | null
-          created_at: string
-          current_value: number
-          id: string
-          machine_id: string
-          optimal_value: number
-          parameter_name: string
-          potential_savings: number | null
-          unit: string
-        }
-        Insert: {
-          applied_at?: string | null
-          created_at?: string
-          current_value: number
-          id?: string
-          machine_id: string
-          optimal_value: number
-          parameter_name: string
-          potential_savings?: number | null
-          unit: string
-        }
-        Update: {
-          applied_at?: string | null
-          created_at?: string
-          current_value?: number
-          id?: string
-          machine_id?: string
-          optimal_value?: number
-          parameter_name?: string
-          potential_savings?: number | null
-          unit?: string
         }
         Relationships: []
       }
@@ -359,105 +260,6 @@ export type Database = {
           },
         ]
       }
-      roles: {
-        Row: {
-          createdAt: string
-          createdBy: string
-          creatorEmail: string | null
-          machines: string
-          name: string
-          pages: string
-          updatedAt: string
-        }
-        Insert: {
-          createdAt: string
-          createdBy: string
-          creatorEmail?: string | null
-          machines: string
-          name: string
-          pages: string
-          updatedAt: string
-        }
-        Update: {
-          createdAt?: string
-          createdBy?: string
-          creatorEmail?: string | null
-          machines?: string
-          name?: string
-          pages?: string
-          updatedAt?: string
-        }
-        Relationships: []
-      }
-      stopreportconfigs: {
-        Row: {
-          createdAt: string
-          id: number
-          machineId: string
-          stopReportConfig: string
-          updatedBy: string
-        }
-        Insert: {
-          createdAt: string
-          id?: never
-          machineId: string
-          stopReportConfig: string
-          updatedBy: string
-        }
-        Update: {
-          createdAt?: string
-          id?: never
-          machineId?: string
-          stopReportConfig?: string
-          updatedBy?: string
-        }
-        Relationships: []
-      }
-      tags: {
-        Row: {
-          createdAt: string
-          dataType: string
-          equipment: string | null
-          id: number
-          line: string | null
-          others: string | null
-          section: string | null
-          tagId: string
-          tagName: string
-          type: string | null
-          unit: string | null
-          updatedAt: string
-        }
-        Insert: {
-          createdAt: string
-          dataType: string
-          equipment?: string | null
-          id?: never
-          line?: string | null
-          others?: string | null
-          section?: string | null
-          tagId: string
-          tagName: string
-          type?: string | null
-          unit?: string | null
-          updatedAt: string
-        }
-        Update: {
-          createdAt?: string
-          dataType?: string
-          equipment?: string | null
-          id?: never
-          line?: string | null
-          others?: string | null
-          section?: string | null
-          tagId?: string
-          tagName?: string
-          type?: string | null
-          unit?: string | null
-          updatedAt?: string
-        }
-        Relationships: []
-      }
       user_answers: {
         Row: {
           attempt_id: string
@@ -508,16 +310,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_latest_metrics: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          machine_id: string
-          tag_id: string
-          value: number
-          unit: string
-          measurement_time: string
-        }[]
-      }
       is_admin: {
         Args: { uid: string }
         Returns: boolean
