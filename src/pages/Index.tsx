@@ -11,18 +11,28 @@ import RiceProductionTable from '@/components/dashboard/RiceProductionTable';
 import EnergySankeyDiagram from '@/components/dashboard/EnergySankeyDiagram';
 import CircuitEnergyFlow from '@/components/dashboard/CircuitEnergyFlow';
 import MaintenanceAlerts from '@/components/dashboard/MaintenanceAlerts';
-import { mockData, summaryMetrics, generateMockData } from '@/utils/mockData';
+import { summaryMetrics } from '@/utils/mockData';
 import { initialRiceProductionData, generateUpdatedRiceData, createRiceMetricsData } from '@/utils/riceProductionData';
 import { generateSankeyData, generateCircuitModels, generateMaintenanceAlerts } from '@/utils/energyFlowData';
 import { RiceProductionMetric } from '@/types/riceData';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { adaptEnergyMetricsToMeasurements, adaptEnergyMetricsToRiceMetrics, adaptEnergyIncidents } from '@/utils/dataAdapters';
-import { EnergyMetric, EnergyIncident } from '@/types/energyData';
+import { useEnergyData } from '@/hooks/useEnergyData';
 import { balanceEnergyReadings } from '@/utils/energyBalancer';
 
 const Index = () => {
-  const [data, setData] = useState(mockData);
+  // Use our new hook for fetching energy data
+  const { 
+    loading, 
+    error, 
+    measurements, 
+    incidents,
+    refreshData
+  } = useEnergyData({
+    useFallbackData: true,
+    pollingInterval: 30000,
+    timeRange: 'day'
+  });
+  
   const [riceData, setRiceData] = useState<RiceProductionMetric[]>(initialRiceProductionData);
   const [metrics, setMetrics] = useState({
     ...summaryMetrics,
@@ -32,9 +42,6 @@ const Index = () => {
     cbamCost: 3197, // € (monthly)
     humidityLevel: 68, // % optimal for rice processing
   });
-  const [loading, setLoading] = useState(true);
-  const [supabaseMetrics, setSupabaseMetrics] = useState<EnergyMetric[]>([]);
-  const [supabaseIncidents, setSupabaseIncidents] = useState<EnergyIncident[]>([]);
   
   // State for new visualization components
   const [sankeyData, setSankeyData] = useState(generateSankeyData());
@@ -42,56 +49,27 @@ const Index = () => {
   const [maintenanceAlerts, setMaintenanceAlerts] = useState(generateMaintenanceAlerts());
 
   useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => {
-      setLoading(false);
+    // Show loading toast when data is loading
+    if (loading) {
+      toast.loading('Loading energy data...');
+    } else {
+      // Show success toast when data is loaded
       toast.success('Energy demo data loaded successfully');
-    }, 800);
-
-    // Fetch initial data from Supabase
-    fetchSupabaseData();
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const fetchSupabaseData = async () => {
-    try {
-      // Fetch energy metrics
-      const { data: energyMetrics, error: metricsError } = await supabase
-        .from('energy_metrics')
-        .select('*');
-      
-      if (metricsError) {
-        console.error('Error fetching energy metrics:', metricsError);
-      } else if (energyMetrics) {
-        setSupabaseMetrics(energyMetrics);
-      }
-      
-      // Fetch energy incidents
-      const { data: incidents, error: incidentsError } = await supabase
-        .from('energy_incidents')
-        .select('*');
-        
-      if (incidentsError) {
-        console.error('Error fetching energy incidents:', incidentsError);
-      } else if (incidents) {
-        setSupabaseIncidents(incidents);
-      }
-    } catch (error) {
-      console.error('Error in fetchSupabaseData:', error);
     }
-  };
+  }, [loading]);
+  
+  // Show error toast if there's an error
+  useEffect(() => {
+    if (error) {
+      toast.error('Error loading data', {
+        description: error.message
+      });
+    }
+  }, [error]);
 
-  // Simulate a data refresh every 30 seconds
+  // Update rice production data every 30 seconds
   useEffect(() => {
     const refreshInterval = setInterval(() => {
-      // Fetch fresh data from Supabase
-      fetchSupabaseData();
-      
-      // Also update local mock data for parts that don't yet use Supabase
-      const refreshedData = generateMockData();
-      setData(refreshedData);
-      
       // Update rice production data
       setRiceData(prevData => generateUpdatedRiceData(prevData));
       
@@ -166,44 +144,31 @@ const Index = () => {
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Select data for the main consumption point (Rice Processing Line)
-  const mainConsumptionPoint = data.consumptionPoints.find(cp => cp.id === 'cp-1');
-
-  if (!mainConsumptionPoint) {
-    return <div>Error loading data</div>;
-  }
-
-  // Convert Supabase data to the formats expected by components
-  const adaptedMeasurements = adaptEnergyMetricsToMeasurements(supabaseMetrics);
-  const adaptedRiceMetrics = adaptEnergyMetricsToRiceMetrics(supabaseMetrics);
-  const adaptedIncidents = adaptEnergyIncidents(supabaseIncidents);
-  
   // Apply energy balancing to measurements
   const balancedMeasurements = balanceEnergyReadings(
-    adaptedMeasurements.map(m => ({ 
+    measurements.map(m => ({ 
       id: m.timestamp, 
       value: m.activePower || 0 
     }))
   ).map(node => {
-    const original = adaptedMeasurements.find(m => m.timestamp === node.id);
+    const original = measurements.find(m => m.timestamp === node.id);
     return original ? { ...original, activePower: node.value } : original;
   }).filter(Boolean);
   
-  // If we have Supabase data, use it; otherwise, fall back to mock data
-  const measurements = adaptedMeasurements.length > 0 
-    ? balancedMeasurements 
-    : mainConsumptionPoint.measurements;
-    
-  const currentRiceData = adaptedRiceMetrics.length > 0
-    ? adaptedRiceMetrics
-    : riceData;
-    
-  const incidents = adaptedIncidents.length > 0
-    ? adaptedIncidents
-    : data.incidents;
-    
   // Create rice metrics for display
-  const riceMetrics = createRiceMetricsData(currentRiceData);
+  const riceMetrics = createRiceMetricsData(riceData);
+
+  // Show loading indicator while data is being fetched
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-16 w-16 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
+          <h2 className="text-xl font-medium">Loading energy data...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -219,6 +184,11 @@ const Index = () => {
               <p className="text-muted-foreground section-fade" style={{ animationDelay: '100ms' }}>
                 Monitor energy consumption, rice production metrics, and CBAM impact for rice processing operations.
               </p>
+              {error && (
+                <div className="mt-2 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
+                  Error connecting to data source. Showing fallback data. {error.message}
+                </div>
+              )}
             </div>
             
             <div className="space-y-6">
@@ -232,8 +202,8 @@ const Index = () => {
               
               {/* Main charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '300ms' }}>
-                <ConsumptionChart data={measurements} />
-                <ParameterComparison data={measurements} />
+                <ConsumptionChart data={balancedMeasurements} />
+                <ParameterComparison data={balancedMeasurements} />
               </div>
               
               {/* NEW: Sankey Diagram */}
@@ -243,7 +213,7 @@ const Index = () => {
               
               {/* Rice Production Data Table */}
               <div className="section-fade" style={{ animationDelay: '400ms' }}>
-                <RiceProductionTable data={currentRiceData} />
+                <RiceProductionTable data={riceData} />
               </div>
               
               {/* NEW: Circuit Energy Flow & Maintenance Alerts */}
@@ -255,7 +225,7 @@ const Index = () => {
               {/* Technical Losses & Energy Incidents */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '500ms' }}>
                 <TechnicalLosses
-                  data={measurements}
+                  data={balancedMeasurements}
                   totalActivePower={metrics.avgActivePower}
                 />
                 <EnergyIncidents incidents={incidents} />
