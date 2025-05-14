@@ -157,9 +157,10 @@ export const adaptEnergyIncidents = (incidents: any[]): MockEnergyIncident[] => 
     if (severity === 'LOW') severityLevel = 'low';
     else if (severity === 'HIGH') severityLevel = 'high';
     
-    // Try to determine incident type
-    let incidentType = 'power_factor';
+    // Try to determine incident type - ensure it's one of the allowed values
+    let incidentType: 'power_factor' | 'voltage_sag' | 'voltage_swell' | 'harmonic_distortion' | 'overload' = 'power_factor';
     const title = (incident.title || '').toLowerCase();
+    
     if (title.includes('voltage') && (title.includes('sag') || title.includes('drop'))) {
       incidentType = 'voltage_sag';
     } else if (title.includes('voltage') && (title.includes('swell') || title.includes('spike'))) {

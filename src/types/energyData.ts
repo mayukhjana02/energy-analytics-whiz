@@ -10,6 +10,9 @@ export interface EnergyMetric {
   created_at: string;
 }
 
+// Define incident types
+export type IncidentType = 'power_factor' | 'voltage_sag' | 'voltage_swell' | 'harmonic_distortion' | 'overload';
+
 // Types for energy incidents from Supabase
 export interface EnergyIncident {
   id: string;
@@ -20,6 +23,8 @@ export interface EnergyIncident {
   status: string;
   created_at: string;
   resolved_at: string | null;
+  // Add a type field with the allowed values
+  type?: IncidentType;
 }
 
 // Types for machine optimizations from Supabase
