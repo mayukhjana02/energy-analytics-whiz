@@ -5,17 +5,17 @@ import { MaintenanceAlert } from '@/components/dashboard/MaintenanceAlerts';
 export const generateSankeyData = () => {
   return {
     nodes: [
-      { name: 'Main Input' },           // 0
-      { name: 'Processing' },           // 1
-      { name: 'Drying' },               // 2
-      { name: 'Milling' },              // 3
-      { name: 'Packaging' },            // 4
-      { name: 'Utilities' },            // 5
-      { name: 'Lighting' },             // 6
-      { name: 'HVAC' },                 // 7
-      { name: 'Processing Losses' },    // 8
-      { name: 'Transmission Losses' },  // 9
-      { name: 'Conversion Losses' }     // 10
+      { name: 'Main Input', category: 'source' },           // 0
+      { name: 'Processing', category: 'process' },           // 1
+      { name: 'Drying', category: 'process' },              // 2
+      { name: 'Milling', category: 'process' },             // 3
+      { name: 'Packaging', category: 'process' },            // 4
+      { name: 'Utilities', category: 'process' },            // 5
+      { name: 'Lighting', category: 'output' },             // 6
+      { name: 'HVAC', category: 'output' },                 // 7
+      { name: 'Processing Losses', category: 'loss' },       // 8
+      { name: 'Transmission Losses', category: 'loss' },     // 9
+      { name: 'Conversion Losses', category: 'loss' }        // 10
     ],
     links: [
       { source: 0, target: 1, value: 42.5 },  // Main -> Processing

@@ -77,10 +77,14 @@ const CustomTooltip = (props: any) => {
 
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    // Add null checks to prevent accessing properties of undefined
     return (
       <div className="bg-background border rounded shadow p-2 text-xs">
         <p className="font-medium">{`${data.source?.name || ''} → ${data.target?.name || ''}`}</p>
-        <p>{`Energy: ${data.value.toFixed(2)} kWh`}</p>
+        {/* Check if data.value exists before calling toFixed() */}
+        {data.value !== undefined && (
+          <p>{`Energy: ${data.value.toFixed(2)} kWh`}</p>
+        )}
       </div>
     );
   }
