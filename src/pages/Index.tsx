@@ -12,6 +12,9 @@ import { mockData, summaryMetrics, generateMockData } from '@/utils/mockData';
 import { initialRiceProductionData, generateUpdatedRiceData, createRiceMetricsData } from '@/utils/riceProductionData';
 import { RiceProductionMetric } from '@/types/riceData';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { adaptEnergyMetricsToMeasurements, adaptEnergyMetricsToRiceMetrics, adaptEnergyIncidents } from '@/utils/dataAdapters';
+import { EnergyMetric, EnergyIncident } from '@/types/energyData';
 
 const Index = () => {
   const [data, setData] = useState(mockData);
@@ -25,6 +28,8 @@ const Index = () => {
     humidityLevel: 68, // % optimal for rice processing
   });
   const [loading, setLoading] = useState(true);
+  const [supabaseMetrics, setSupabaseMetrics] = useState<EnergyMetric[]>([]);
+  const [supabaseIncidents, setSupabaseIncidents] = useState<EnergyIncident[]>([]);
 
   useEffect(() => {
     // Simulate data loading
@@ -33,12 +38,47 @@ const Index = () => {
       toast.success('Energy demo data loaded successfully');
     }, 800);
 
+    // Fetch initial data from Supabase
+    fetchSupabaseData();
+
     return () => clearTimeout(timer);
   }, []);
+
+  const fetchSupabaseData = async () => {
+    try {
+      // Fetch energy metrics
+      const { data: energyMetrics, error: metricsError } = await supabase
+        .from('energy_metrics')
+        .select('*');
+      
+      if (metricsError) {
+        console.error('Error fetching energy metrics:', metricsError);
+      } else if (energyMetrics) {
+        setSupabaseMetrics(energyMetrics);
+      }
+      
+      // Fetch energy incidents
+      const { data: incidents, error: incidentsError } = await supabase
+        .from('energy_incidents')
+        .select('*');
+        
+      if (incidentsError) {
+        console.error('Error fetching energy incidents:', incidentsError);
+      } else if (incidents) {
+        setSupabaseIncidents(incidents);
+      }
+    } catch (error) {
+      console.error('Error in fetchSupabaseData:', error);
+    }
+  };
 
   // Simulate a data refresh every 30 seconds
   useEffect(() => {
     const refreshInterval = setInterval(() => {
+      // Fetch fresh data from Supabase
+      fetchSupabaseData();
+      
+      // Also update local mock data for parts that don't yet use Supabase
       const refreshedData = generateMockData();
       setData(refreshedData);
       
@@ -58,8 +98,26 @@ const Index = () => {
     return <div>Error loading data</div>;
   }
 
+  // Convert Supabase data to the formats expected by components
+  const adaptedMeasurements = adaptEnergyMetricsToMeasurements(supabaseMetrics);
+  const adaptedRiceMetrics = adaptEnergyMetricsToRiceMetrics(supabaseMetrics);
+  const adaptedIncidents = adaptEnergyIncidents(supabaseIncidents);
+  
+  // If we have Supabase data, use it; otherwise, fall back to mock data
+  const measurements = adaptedMeasurements.length > 0 
+    ? adaptedMeasurements 
+    : mainConsumptionPoint.measurements;
+    
+  const currentRiceData = adaptedRiceMetrics.length > 0
+    ? adaptedRiceMetrics
+    : riceData;
+    
+  const incidents = adaptedIncidents.length > 0
+    ? adaptedIncidents
+    : data.incidents;
+    
   // Create rice metrics for display
-  const riceMetrics = createRiceMetricsData(riceData);
+  const riceMetrics = createRiceMetricsData(currentRiceData);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -88,22 +146,22 @@ const Index = () => {
               
               {/* Main charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '300ms' }}>
-                <ConsumptionChart data={mainConsumptionPoint.measurements} />
-                <ParameterComparison data={mainConsumptionPoint.measurements} />
+                <ConsumptionChart data={measurements} />
+                <ParameterComparison data={measurements} />
               </div>
               
               {/* Rice Production Data Table */}
               <div className="section-fade" style={{ animationDelay: '350ms' }}>
-                <RiceProductionTable data={riceData} />
+                <RiceProductionTable data={currentRiceData} />
               </div>
               
               {/* Technical Losses & Energy Incidents */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '400ms' }}>
                 <TechnicalLosses
-                  data={mainConsumptionPoint.measurements}
+                  data={measurements}
                   totalActivePower={metrics.avgActivePower}
                 />
-                <EnergyIncidents incidents={data.incidents} />
+                <EnergyIncidents incidents={incidents} />
               </div>
             </div>
           </div>
