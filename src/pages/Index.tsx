@@ -8,13 +8,18 @@ import ParameterComparison from '@/components/dashboard/ParameterComparison';
 import TechnicalLosses from '@/components/dashboard/TechnicalLosses';
 import EnergyIncidents from '@/components/dashboard/EnergyIncidents';
 import RiceProductionTable from '@/components/dashboard/RiceProductionTable';
+import EnergySankeyDiagram from '@/components/dashboard/EnergySankeyDiagram';
+import CircuitEnergyFlow from '@/components/dashboard/CircuitEnergyFlow';
+import MaintenanceAlerts from '@/components/dashboard/MaintenanceAlerts';
 import { mockData, summaryMetrics, generateMockData } from '@/utils/mockData';
 import { initialRiceProductionData, generateUpdatedRiceData, createRiceMetricsData } from '@/utils/riceProductionData';
+import { generateSankeyData, generateCircuitModels, generateMaintenanceAlerts } from '@/utils/energyFlowData';
 import { RiceProductionMetric } from '@/types/riceData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { adaptEnergyMetricsToMeasurements, adaptEnergyMetricsToRiceMetrics, adaptEnergyIncidents } from '@/utils/dataAdapters';
 import { EnergyMetric, EnergyIncident } from '@/types/energyData';
+import { balanceEnergyReadings } from '@/utils/energyBalancer';
 
 const Index = () => {
   const [data, setData] = useState(mockData);
@@ -30,6 +35,11 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [supabaseMetrics, setSupabaseMetrics] = useState<EnergyMetric[]>([]);
   const [supabaseIncidents, setSupabaseIncidents] = useState<EnergyIncident[]>([]);
+  
+  // State for new visualization components
+  const [sankeyData, setSankeyData] = useState(generateSankeyData());
+  const [circuitModels, setCircuitModels] = useState(generateCircuitModels());
+  const [maintenanceAlerts, setMaintenanceAlerts] = useState(generateMaintenanceAlerts());
 
   useEffect(() => {
     // Simulate data loading
@@ -85,6 +95,71 @@ const Index = () => {
       // Update rice production data
       setRiceData(prevData => generateUpdatedRiceData(prevData));
       
+      // Update Sankey diagram with slight variations
+      setSankeyData(prevData => {
+        const newData = { ...prevData };
+        newData.links = newData.links.map(link => ({
+          ...link, 
+          value: link.value * (0.98 + Math.random() * 0.04) // +/- 2% random variation
+        }));
+        return newData;
+      });
+      
+      // Update circuit models with new values
+      setCircuitModels(prevModels => {
+        return prevModels.map(model => ({
+          ...model,
+          nodes: model.nodes.map(node => ({
+            ...node,
+            power: node.power * (0.95 + Math.random() * 0.1),
+            voltage: node.voltage * (0.99 + Math.random() * 0.02),
+            current: node.current * (0.95 + Math.random() * 0.1),
+          }))
+        }));
+      });
+      
+      // Occasionally add a new maintenance alert (10% chance)
+      if (Math.random() < 0.1) {
+        const newAlert = {
+          id: `alert-${Date.now()}`,
+          machineId: 'machine-5',
+          machineName: 'Dryer Control Panel',
+          title: 'Voltage Fluctuation',
+          description: 'Unexpected voltage fluctuations detected in the dryer control circuit.',
+          severity: Math.random() < 0.3 ? 'high' : Math.random() < 0.7 ? 'medium' : 'low' as any,
+          detectedAt: new Date().toISOString(),
+          metrics: [
+            {
+              name: 'Voltage Stability',
+              value: 85.3,
+              unit: '%',
+              deviation: -12.7
+            },
+            {
+              name: 'Voltage',
+              value: 412.7 * (0.9 + Math.random() * 0.2),
+              unit: 'V',
+              deviation: Math.random() < 0.5 ? 8.3 : -8.3
+            }
+          ],
+          recommendation: 'Check power supply quality and verify surge protection devices.',
+          status: 'new' as const
+        };
+        
+        setMaintenanceAlerts(prev => [newAlert, ...prev.slice(0, 7)]);
+        
+        // Show a notification for critical alerts
+        if (newAlert.severity === 'high') {
+          toast.error(`CRITICAL ALERT: ${newAlert.title}`, {
+            description: newAlert.description
+          });
+        } else if (newAlert.severity === 'medium') {
+          toast.warning(`ALERT: ${newAlert.title}`, {
+            description: newAlert.description
+          });
+        }
+      }
+      
       toast.info('Energy data refreshed');
     }, 30000); // 30 seconds
 
@@ -103,9 +178,20 @@ const Index = () => {
   const adaptedRiceMetrics = adaptEnergyMetricsToRiceMetrics(supabaseMetrics);
   const adaptedIncidents = adaptEnergyIncidents(supabaseIncidents);
   
+  // Apply energy balancing to measurements
+  const balancedMeasurements = balanceEnergyReadings(
+    adaptedMeasurements.map(m => ({ 
+      id: m.timestamp, 
+      value: m.activePower || 0 
+    }))
+  ).map(node => {
+    const original = adaptedMeasurements.find(m => m.timestamp === node.id);
+    return original ? { ...original, activePower: node.value } : original;
+  }).filter(Boolean);
+  
   // If we have Supabase data, use it; otherwise, fall back to mock data
   const measurements = adaptedMeasurements.length > 0 
-    ? adaptedMeasurements 
+    ? balancedMeasurements 
     : mainConsumptionPoint.measurements;
     
   const currentRiceData = adaptedRiceMetrics.length > 0
@@ -150,13 +236,24 @@ const Index = () => {
                 <ParameterComparison data={measurements} />
               </div>
               
-              {/* Rice Production Data Table */}
+              {/* NEW: Sankey Diagram */}
               <div className="section-fade" style={{ animationDelay: '350ms' }}>
+                <EnergySankeyDiagram data={sankeyData} />
+              </div>
+              
+              {/* Rice Production Data Table */}
+              <div className="section-fade" style={{ animationDelay: '400ms' }}>
                 <RiceProductionTable data={currentRiceData} />
               </div>
               
+              {/* NEW: Circuit Energy Flow & Maintenance Alerts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '450ms' }}>
+                <CircuitEnergyFlow diagrams={circuitModels} />
+                <MaintenanceAlerts alerts={maintenanceAlerts} />
+              </div>
+              
               {/* Technical Losses & Energy Incidents */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '400ms' }}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '500ms' }}>
                 <TechnicalLosses
                   data={measurements}
                   totalActivePower={metrics.avgActivePower}

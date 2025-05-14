@@ -1,120 +1,161 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+ 
 @layer base {
   :root {
-    --background: 210 50% 98%;
-    --foreground: 210 60% 10%;
-
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 210 60% 10%;
-
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 60% 10%;
-
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 210 60% 10%;
-
-    --muted: 210 40% 96%;
-    --muted-foreground: 210 30% 40%;
-
-    --accent: 210 40% 96%;
-    --accent-foreground: 210 60% 10%;
-
-    --destructive: 0 85% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 210 100% 50%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 210 60% 10%;
-    --sidebar-primary: 210 100% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 210 60% 10%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 210 100% 50%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+    --energy-red: 354 100% 60%;
+    --energy-green: 142 76% 50%;
+    --energy-blue: 211 100% 52%;
+    --energy-yellow: 35 100% 52%;
   }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
 
+@layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  .glass {
-    @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-sm;
-  }
-
-  .glass-card {
-    @apply glass rounded-2xl transition-all duration-300;
-  }
-
-  .glass-card:hover {
-    @apply shadow-md bg-white/90;
-  }
-
-  .premium-shadow {
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-  }
-
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .page-transition-enter {
-    @apply opacity-0 translate-y-4;
-  }
-
-  .page-transition-enter-active {
-    @apply opacity-100 translate-y-0 transition-all duration-300 ease-out;
-  }
-
-  .section-fade {
-    @apply opacity-0;
-    animation: fadeIn 0.6s ease-out forwards;
-  }
-
-  @keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
+    @apply bg-background text-foreground;
   }
 }
 
-@layer components {
-  .metric-value {
-    @apply text-2xl md:text-3xl font-medium tracking-tight;
+/* Animation for dashboard sections */
+.section-fade {
+  animation: fadeInUp 0.6s ease forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
-  .metric-label {
-    @apply text-xs md:text-sm text-muted-foreground uppercase tracking-wide font-medium;
-  }
-  
-  .chart-container {
-    @apply p-0.5 h-full w-full rounded-xl overflow-hidden;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@layer utilities {
-  .text-shadow {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+/* Glass card effect for tooltips */
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass-card {
+  background: rgba(30, 30, 35, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Styling for Sankey diagram */
+.node-rectangle {
+  transition: opacity 0.3s;
+}
+
+.node-rectangle:hover {
+  opacity: 1;
+  filter: brightness(1.1);
+}
+
+/* Circuit flow animation */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
   }
-  
-  .text-glow {
-    text-shadow: 0 0 8px rgba(10, 132, 255, 0.5);
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.energy-flow {
+  animation: pulse 2s infinite;
+}
+
+/* Make all charts responsive */
+.recharts-responsive-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Custom styles for maintenance alerts */
+.alert-pulse {
+  position: relative;
+}
+
+.alert-pulse::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 rgba(255, 55, 95, 0.4);
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 55, 95, 0.4);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(255, 55, 95, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 55, 95, 0);
   }
 }
