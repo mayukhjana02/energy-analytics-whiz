@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertOctagonIcon, AlertTriangleIcon, ArrowRightIcon, ToolIcon, ZapIcon } from 'lucide-react';
+import { AlertOctagonIcon, AlertTriangleIcon, ArrowRightIcon, WrenchIcon, ZapIcon } from 'lucide-react';
 import { formatTimestamp } from '@/utils/dataTransformations';
 
 export interface MaintenanceAlert {
@@ -37,7 +36,7 @@ const getSeverityIcon = (severity: MaintenanceAlert['severity']) => {
       return <AlertTriangleIcon className="h-4 w-4" />;
     case 'low':
     default:
-      return <ToolIcon className="h-4 w-4" />;
+      return <WrenchIcon className="h-4 w-4" />;
   }
 };
 
