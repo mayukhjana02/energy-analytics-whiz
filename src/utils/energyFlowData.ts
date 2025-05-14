@@ -1,21 +1,24 @@
 
 import { MaintenanceAlert } from '@/components/dashboard/MaintenanceAlerts';
 
+// Define the category type to match the SankeyNode interface
+type SankeyNodeCategory = 'source' | 'process' | 'output' | 'loss';
+
 // Energy Sankey diagram data
 export const generateSankeyData = () => {
   return {
     nodes: [
-      { name: 'Main Input', category: 'source' },           // 0
-      { name: 'Processing', category: 'process' },           // 1
-      { name: 'Drying', category: 'process' },              // 2
-      { name: 'Milling', category: 'process' },             // 3
-      { name: 'Packaging', category: 'process' },            // 4
-      { name: 'Utilities', category: 'process' },            // 5
-      { name: 'Lighting', category: 'output' },             // 6
-      { name: 'HVAC', category: 'output' },                 // 7
-      { name: 'Processing Losses', category: 'loss' },       // 8
-      { name: 'Transmission Losses', category: 'loss' },     // 9
-      { name: 'Conversion Losses', category: 'loss' }        // 10
+      { name: 'Main Input', category: 'source' as SankeyNodeCategory },           // 0
+      { name: 'Processing', category: 'process' as SankeyNodeCategory },           // 1
+      { name: 'Drying', category: 'process' as SankeyNodeCategory },              // 2
+      { name: 'Milling', category: 'process' as SankeyNodeCategory },             // 3
+      { name: 'Packaging', category: 'process' as SankeyNodeCategory },            // 4
+      { name: 'Utilities', category: 'process' as SankeyNodeCategory },            // 5
+      { name: 'Lighting', category: 'output' as SankeyNodeCategory },             // 6
+      { name: 'HVAC', category: 'output' as SankeyNodeCategory },                 // 7
+      { name: 'Processing Losses', category: 'loss' as SankeyNodeCategory },       // 8
+      { name: 'Transmission Losses', category: 'loss' as SankeyNodeCategory },     // 9
+      { name: 'Conversion Losses', category: 'loss' as SankeyNodeCategory }        // 10
     ],
     links: [
       { source: 0, target: 1, value: 42.5 },  // Main -> Processing
