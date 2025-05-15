@@ -1,5 +1,6 @@
 
-// Import directly from Radix UI instead of from our own hook
-import { useToast, toast } from "@/components/ui/toast";
+// Re-export from the correct location
+import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export { useToast, toast };

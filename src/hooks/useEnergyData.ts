@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner'; // Use sonner toast directly instead of our wrapper
+import { toast } from 'sonner'; // Use sonner toast directly
 import { mockData, generateMockData } from '@/utils/mockData';
 import { adaptEnergyMetricsToMeasurements, adaptEnergyIncidents } from '@/utils/dataAdapters';
 import { EnergyMeasurement, EnergyIncident } from '@/utils/mockData';
