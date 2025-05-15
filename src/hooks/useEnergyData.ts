@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { energyApi } from '@/integrations/api/client';
 import { mockData, generateMockData } from '@/utils/mockData';
 import { adaptEnergyMetricsToMeasurements, adaptEnergyIncidents } from '@/utils/dataAdapters';
 import { EnergyMeasurement, EnergyIncident } from '@/utils/mockData';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseEnergyDataOptions {
   useFallbackData?: boolean;
@@ -53,30 +53,37 @@ export function useEnergyData(options: UseEnergyDataOptions = {}) {
     };
   };
 
-  // Fetch data from API
+  // Fetch data from Supabase
   const fetchData = async () => {
     try {
       setLoading(true);
       
       const timeParams = getTimeRangeParams();
       
-      // Fetch energy metrics
-      const { data: metricsData, error: metricsError } = await energyApi.getEnergyMetrics({
-        ...timeParams,
-        limit: 1000
-      });
+      // Fetch energy metrics from Supabase
+      const { data: metricsData, error: metricsError } = await supabase
+        .from('energy_metrics')
+        .select('*')
+        .gte('measurement_time', timeParams.fromTime)
+        .lte('measurement_time', timeParams.toTime)
+        .order('measurement_time', { ascending: true })
+        .limit(1000);
       
       if (metricsError) throw metricsError;
       
-      // Fetch incidents
-      const { data: incidentsData, error: incidentsError } = await energyApi.getEnergyIncidents({
-        limit: 20
-      });
+      // Fetch incidents from Supabase
+      const { data: incidentsData, error: incidentsError } = await supabase
+        .from('energy_incidents')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
       
       if (incidentsError) throw incidentsError;
       
-      // Fetch optimizations
-      const { data: optimizationsData, error: optimizationsError } = await energyApi.getMachineOptimizations();
+      // Fetch optimizations from Supabase
+      const { data: optimizationsData, error: optimizationsError } = await supabase
+        .from('machine_optimizations')
+        .select('*');
       
       if (optimizationsError) throw optimizationsError;
       
@@ -88,18 +95,22 @@ export function useEnergyData(options: UseEnergyDataOptions = {}) {
       setIncidents(adaptedIncidents);
       setOptimizations(optimizationsData || []);
       setError(null);
+
+      // Log success
+      console.log(`Successfully fetched ${adaptedMeasurements.length} measurements, ${adaptedIncidents.length} incidents from Supabase`);
     } catch (err) {
+      console.error('Error fetching energy data from Supabase:', err);
       setError(err as Error);
       
-      // Use fallback data if API fails and fallback is enabled
+      // Use fallback data if Supabase fails and fallback is enabled
       if (useFallbackData) {
-        console.warn('Using fallback data due to API error:', err);
+        console.warn('Using fallback data due to Supabase error:', err);
         const fallbackData = generateMockData();
         setMeasurements(fallbackData.consumptionPoints[0].measurements);
         setIncidents(fallbackData.incidents);
         toast({
           title: 'Using offline data',
-          description: 'Connection to data source failed. Using cached data.',
+          description: 'Connection to Supabase failed. Using cached data.',
           variant: 'destructive'
         });
       }

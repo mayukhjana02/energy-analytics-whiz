@@ -9,8 +9,10 @@ import TechnicalLosses from '@/components/dashboard/TechnicalLosses';
 import EnergyIncidents from '@/components/dashboard/EnergyIncidents';
 import RiceProductionTable from '@/components/dashboard/RiceProductionTable';
 import EnergySankeyDiagram from '@/components/dashboard/EnergySankeyDiagram';
+import EnergyFlowBreakdown from '@/components/dashboard/EnergyFlowBreakdown';
 import CircuitEnergyFlow from '@/components/dashboard/CircuitEnergyFlow';
 import MaintenanceAlerts from '@/components/dashboard/MaintenanceAlerts';
+import DataImportTool from '@/components/dashboard/DataImportTool';
 import { summaryMetrics } from '@/utils/mockData';
 import { initialRiceProductionData, generateUpdatedRiceData, createRiceMetricsData } from '@/utils/riceProductionData';
 import { generateSankeyData, generateCircuitModels, generateMaintenanceAlerts } from '@/utils/energyFlowData';
@@ -18,14 +20,18 @@ import { RiceProductionMetric } from '@/types/riceData';
 import { toast } from 'sonner';
 import { useEnergyData } from '@/hooks/useEnergyData';
 import { balanceEnergyReadings } from '@/utils/energyBalancer';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Upload, Database } from 'lucide-react';
 
 const Index = () => {
-  // Use our new hook for fetching energy data
+  // Use our hook for fetching energy data from Supabase
   const { 
     loading, 
     error, 
     measurements, 
     incidents,
+    optimizations,
     refreshData
   } = useEnergyData({
     useFallbackData: true,
@@ -43,25 +49,32 @@ const Index = () => {
     humidityLevel: 68, // % optimal for rice processing
   });
   
-  // State for new visualization components
+  // State for visualization components
   const [sankeyData, setSankeyData] = useState(generateSankeyData());
   const [circuitModels, setCircuitModels] = useState(generateCircuitModels());
   const [maintenanceAlerts, setMaintenanceAlerts] = useState(generateMaintenanceAlerts());
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
+  // Effect for showing loading/success toasts
   useEffect(() => {
-    // Show loading toast when data is loading
     if (loading) {
-      toast.loading('Loading energy data...');
+      toast.loading('Loading energy data from Supabase...');
     } else {
-      // Show success toast when data is loaded
-      toast.success('Energy demo data loaded successfully');
+      toast.success('Energy data loaded successfully');
+      
+      // If we loaded data successfully, also display database connection info
+      if (!error) {
+        toast.info('Successfully connected to Supabase database', {
+          description: `Loaded ${measurements.length} measurements, ${incidents.length} incidents`
+        });
+      }
     }
-  }, [loading]);
+  }, [loading, measurements.length, incidents.length]);
   
   // Show error toast if there's an error
   useEffect(() => {
     if (error) {
-      toast.error('Error loading data', {
+      toast.error('Error loading data from Supabase', {
         description: error.message
       });
     }
@@ -164,7 +177,7 @@ const Index = () => {
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="h-16 w-16 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
-          <h2 className="text-xl font-medium">Loading energy data...</h2>
+          <h2 className="text-xl font-medium">Loading energy data from Supabase...</h2>
         </div>
       </div>
     );
@@ -180,13 +193,51 @@ const Index = () => {
         <main className="flex-1 overflow-y-auto pb-8">
           <div className="container px-4 py-6 max-w-7xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl font-semibold mb-2 tracking-tight section-fade">Energy Demo</h1>
-              <p className="text-muted-foreground section-fade" style={{ animationDelay: '100ms' }}>
-                Monitor energy consumption, rice production metrics, and CBAM impact for rice processing operations.
-              </p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-3xl font-semibold mb-2 tracking-tight section-fade">Energy Demo</h1>
+                  <p className="text-muted-foreground section-fade" style={{ animationDelay: '100ms' }}>
+                    Monitor energy consumption, rice production metrics, and CBAM impact for rice processing operations.
+                  </p>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={refreshData}
+                    className="flex items-center gap-1"
+                  >
+                    <Database className="h-4 w-4" />
+                    Refresh Data
+                  </Button>
+                  
+                  <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="default"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Upload className="h-4 w-4" />
+                        Import Data
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[700px]">
+                      <DataImportTool 
+                        onImportComplete={() => {
+                          setIsImportDialogOpen(false);
+                          refreshData();
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              
               {error && (
                 <div className="mt-2 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
-                  Error connecting to data source. Showing fallback data. {error.message}
+                  Error connecting to Supabase. Showing fallback data. {error.message}
                 </div>
               )}
             </div>
@@ -206,9 +257,14 @@ const Index = () => {
                 <ParameterComparison data={balancedMeasurements} />
               </div>
               
-              {/* NEW: Sankey Diagram */}
+              {/* Enhanced Sankey Diagram */}
               <div className="section-fade" style={{ animationDelay: '350ms' }}>
                 <EnergySankeyDiagram data={sankeyData} />
+              </div>
+              
+              {/* New Energy Flow Breakdown */}
+              <div className="section-fade" style={{ animationDelay: '375ms' }}>
+                <EnergyFlowBreakdown data={balancedMeasurements} />
               </div>
               
               {/* Rice Production Data Table */}
@@ -216,7 +272,7 @@ const Index = () => {
                 <RiceProductionTable data={riceData} />
               </div>
               
-              {/* NEW: Circuit Energy Flow & Maintenance Alerts */}
+              {/* Circuit Energy Flow & Maintenance Alerts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 section-fade" style={{ animationDelay: '450ms' }}>
                 <CircuitEnergyFlow diagrams={circuitModels} />
                 <MaintenanceAlerts alerts={maintenanceAlerts} />

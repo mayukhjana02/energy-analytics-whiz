@@ -4,38 +4,82 @@ import { MaintenanceAlert } from '@/components/dashboard/MaintenanceAlerts';
 // Define the category type to match the SankeyNode interface
 type SankeyNodeCategory = 'source' | 'process' | 'output' | 'loss';
 
-// Energy Sankey diagram data
+// Energy Sankey diagram data with more detailed flow information
 export const generateSankeyData = () => {
   return {
     nodes: [
-      { name: 'Main Input', category: 'source' as SankeyNodeCategory },           // 0
-      { name: 'Processing', category: 'process' as SankeyNodeCategory },           // 1
-      { name: 'Drying', category: 'process' as SankeyNodeCategory },              // 2
-      { name: 'Milling', category: 'process' as SankeyNodeCategory },             // 3
-      { name: 'Packaging', category: 'process' as SankeyNodeCategory },            // 4
-      { name: 'Utilities', category: 'process' as SankeyNodeCategory },            // 5
-      { name: 'Lighting', category: 'output' as SankeyNodeCategory },             // 6
-      { name: 'HVAC', category: 'output' as SankeyNodeCategory },                 // 7
-      { name: 'Processing Losses', category: 'loss' as SankeyNodeCategory },       // 8
-      { name: 'Transmission Losses', category: 'loss' as SankeyNodeCategory },     // 9
-      { name: 'Conversion Losses', category: 'loss' as SankeyNodeCategory }        // 10
+      // Energy sources
+      { name: 'Grid Input', category: 'source' as SankeyNodeCategory },          // 0
+      { name: 'Solar Input', category: 'source' as SankeyNodeCategory },         // 1
+      { name: 'Generator', category: 'source' as SankeyNodeCategory },           // 2
+      
+      // Main processing stages
+      { name: 'Main Distribution', category: 'process' as SankeyNodeCategory },   // 3
+      
+      // Processing departments
+      { name: 'Rice Processing', category: 'process' as SankeyNodeCategory },     // 4
+      { name: 'Drying', category: 'process' as SankeyNodeCategory },             // 5
+      { name: 'Milling', category: 'process' as SankeyNodeCategory },            // 6
+      { name: 'Packaging', category: 'process' as SankeyNodeCategory },          // 7
+      
+      // Supporting systems
+      { name: 'Utilities', category: 'process' as SankeyNodeCategory },          // 8
+      { name: 'HVAC', category: 'output' as SankeyNodeCategory },                // 9
+      { name: 'Lighting', category: 'output' as SankeyNodeCategory },            // 10
+      { name: 'Water Treatment', category: 'output' as SankeyNodeCategory },      // 11
+      
+      // Equipment level
+      { name: 'Huskers', category: 'output' as SankeyNodeCategory },              // 12
+      { name: 'Polishers', category: 'output' as SankeyNodeCategory },            // 13
+      { name: 'Sorting', category: 'output' as SankeyNodeCategory },             // 14
+      { name: 'Dryer Units', category: 'output' as SankeyNodeCategory },          // 15
+      { name: 'Packaging Machines', category: 'output' as SankeyNodeCategory },    // 16
+      
+      // Losses
+      { name: 'Transmission Losses', category: 'loss' as SankeyNodeCategory },    // 17
+      { name: 'Heat Losses', category: 'loss' as SankeyNodeCategory },           // 18
+      { name: 'Reactive Power', category: 'loss' as SankeyNodeCategory },         // 19
+      { name: 'Motor Inefficiency', category: 'loss' as SankeyNodeCategory }      // 20
     ],
     links: [
-      { source: 0, target: 1, value: 42.5 },  // Main -> Processing
-      { source: 0, target: 2, value: 30.2 },  // Main -> Drying
-      { source: 0, target: 3, value: 25.8 },  // Main -> Milling
-      { source: 0, target: 4, value: 15.5 },  // Main -> Packaging
-      { source: 0, target: 5, value: 18.3 },  // Main -> Utilities
-      { source: 0, target: 9, value: 3.2 },   // Main -> Transmission Losses
+      // Energy inputs to main distribution
+      { source: 0, target: 3, value: 75.8 },  // Grid -> Main Distribution
+      { source: 1, target: 3, value: 24.2 },  // Solar -> Main Distribution
+      { source: 2, target: 3, value: 12.5 },  // Generator -> Main Distribution
       
-      { source: 5, target: 6, value: 6.8 },   // Utilities -> Lighting
-      { source: 5, target: 7, value: 9.2 },   // Utilities -> HVAC
-      { source: 5, target: 10, value: 2.3 },  // Utilities -> Conversion Losses
+      // Main distribution losses
+      { source: 3, target: 17, value: 3.4 },  // Main Distribution -> Transmission Losses
       
-      { source: 1, target: 8, value: 4.1 },   // Processing -> Processing Losses
-      { source: 2, target: 8, value: 3.8 },   // Drying -> Processing Losses
-      { source: 3, target: 8, value: 2.6 },   // Milling -> Processing Losses
-      { source: 4, target: 8, value: 1.5 }    // Packaging -> Processing Losses
+      // Main distribution to departments
+      { source: 3, target: 4, value: 42.5 },  // Main Distribution -> Rice Processing
+      { source: 3, target: 5, value: 30.2 },  // Main Distribution -> Drying
+      { source: 3, target: 6, value: 22.8 },  // Main Distribution -> Milling
+      { source: 3, target: 7, value: 15.5 },  // Main Distribution -> Packaging
+      { source: 3, target: 8, value: 18.3 },  // Main Distribution -> Utilities
+      
+      // Rice Processing breakdown
+      { source: 4, target: 12, value: 22.3 }, // Rice Processing -> Huskers
+      { source: 4, target: 13, value: 14.6 }, // Rice Processing -> Polishers
+      { source: 4, target: 14, value: 5.6 },  // Rice Processing -> Sorting
+      { source: 4, target: 19, value: 1.8 },  // Rice Processing -> Reactive Power Loss
+      { source: 4, target: 20, value: 2.2 },  // Rice Processing -> Motor Inefficiency
+      
+      // Drying breakdown
+      { source: 5, target: 15, value: 26.4 }, // Drying -> Dryer Units
+      { source: 5, target: 18, value: 3.8 },  // Drying -> Heat Losses
+      
+      // Milling breakdown
+      { source: 6, target: 19, value: 2.1 },  // Milling -> Reactive Power Loss
+      { source: 6, target: 20, value: 1.8 },  // Milling -> Motor Inefficiency
+      
+      // Packaging breakdown
+      { source: 7, target: 16, value: 14.1 }, // Packaging -> Packaging Machines
+      { source: 7, target: 19, value: 1.4 },  // Packaging -> Reactive Power Loss
+      
+      // Utilities breakdown
+      { source: 8, target: 9, value: 8.7 },   // Utilities -> HVAC
+      { source: 8, target: 10, value: 6.2 },  // Utilities -> Lighting
+      { source: 8, target: 11, value: 3.4 },  // Utilities -> Water Treatment
     ]
   };
 };
