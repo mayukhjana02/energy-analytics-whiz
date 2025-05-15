@@ -8,7 +8,7 @@ import {
   GaugeIcon,
   HomeIcon,
   FlaskConicalIcon,
-  GrainIcon,
+  WheatIcon, // Replaced GrainIcon with WheatIcon which is available in lucide-react
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -50,7 +50,7 @@ const Sidebar = () => {
             asChild
           >
             <Link to="/rice-production">
-              <GrainIcon className="mr-2 h-4 w-4" />
+              <WheatIcon className="mr-2 h-4 w-4" />
               Rice Production
             </Link>
           </Button>
