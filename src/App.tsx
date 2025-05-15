@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PhysicsOptimization from "./pages/PhysicsOptimization";
 import ConsumptionAnalytics from "./pages/ConsumptionAnalytics";
+import RiceProduction from "./pages/RiceProduction";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -18,6 +19,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/rice-production" element={<RiceProduction />} />
           <Route path="/physics" element={<PhysicsOptimization />} />
           <Route path="/analytics" element={<ConsumptionAnalytics />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

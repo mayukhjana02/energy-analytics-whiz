@@ -7,15 +7,12 @@ import ConsumptionChart from '@/components/dashboard/ConsumptionChart';
 import ParameterComparison from '@/components/dashboard/ParameterComparison';
 import TechnicalLosses from '@/components/dashboard/TechnicalLosses';
 import EnergyIncidents from '@/components/dashboard/EnergyIncidents';
-import RiceProductionTable from '@/components/dashboard/RiceProductionTable';
 import EnergySankeyDiagram from '@/components/dashboard/EnergySankeyDiagram';
 import EnergyFlowBreakdown from '@/components/dashboard/EnergyFlowBreakdown';
 import CircuitEnergyFlow from '@/components/dashboard/CircuitEnergyFlow';
 import MaintenanceAlerts from '@/components/dashboard/MaintenanceAlerts';
 import { summaryMetrics } from '@/utils/mockData';
-import { initialRiceProductionData, generateUpdatedRiceData, createRiceMetricsData } from '@/utils/riceProductionData';
 import { generateSankeyData, generateCircuitModels, generateMaintenanceAlerts } from '@/utils/energyFlowData';
-import { RiceProductionMetric } from '@/types/riceData';
 import { toast } from 'sonner';
 import { useEnergyData } from '@/hooks/useEnergyData';
 import { balanceEnergyReadings } from '@/utils/energyBalancer';
@@ -35,7 +32,6 @@ const Index = () => {
     timeRange: 'day'
   });
   
-  const [riceData, setRiceData] = useState<RiceProductionMetric[]>(initialRiceProductionData);
   const [metrics, setMetrics] = useState({
     ...summaryMetrics,
     // Add CBAM-specific metrics
@@ -50,23 +46,7 @@ const Index = () => {
   const [circuitModels, setCircuitModels] = useState(generateCircuitModels());
   const [maintenanceAlerts, setMaintenanceAlerts] = useState(generateMaintenanceAlerts());
 
-  // Effect for showing loading/success toasts
-  useEffect(() => {
-    if (loading) {
-      toast.loading('Loading energy data from Supabase...');
-    } else {
-      toast.success('Energy data loaded successfully');
-      
-      // If we loaded data successfully, also display database connection info
-      if (!error) {
-        toast.info('Successfully connected to Supabase database', {
-          description: `Loaded ${measurements.length} measurements, ${incidents.length} incidents`
-        });
-      }
-    }
-  }, [loading, measurements.length, incidents.length]);
-  
-  // Show error toast if there's an error
+  // Show error toast only if there's an error
   useEffect(() => {
     if (error) {
       toast.error('Error loading data from Supabase', {
@@ -75,12 +55,9 @@ const Index = () => {
     }
   }, [error]);
 
-  // Update rice production data every 30 seconds
+  // Update circuit models with new values every 30 seconds
   useEffect(() => {
     const refreshInterval = setInterval(() => {
-      // Update rice production data
-      setRiceData(prevData => generateUpdatedRiceData(prevData));
-      
       // Update Sankey diagram with slight variations
       setSankeyData(prevData => {
         const newData = { ...prevData };
@@ -145,8 +122,6 @@ const Index = () => {
           });
         }
       }
-      
-      toast.info('Energy data refreshed');
     }, 30000); // 30 seconds
 
     return () => clearInterval(refreshInterval);
@@ -163,16 +138,13 @@ const Index = () => {
     return original ? { ...original, activePower: node.value } : original;
   }).filter(Boolean);
   
-  // Create rice metrics for display
-  const riceMetrics = createRiceMetricsData(riceData);
-
   // Show loading indicator while data is being fetched
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="h-16 w-16 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
-          <h2 className="text-xl font-medium">Loading energy data from Supabase...</h2>
+          <h2 className="text-xl font-medium">Loading energy data...</h2>
         </div>
       </div>
     );
@@ -208,8 +180,7 @@ const Index = () => {
               {/* Energy Overview with CBAM metrics */}
               <div className="section-fade" style={{ animationDelay: '200ms' }}>
                 <EnergyOverview data={{
-                  ...metrics,
-                  additionalMetrics: riceMetrics
+                  ...metrics
                 }} />
               </div>
               
@@ -227,11 +198,6 @@ const Index = () => {
               {/* New Energy Flow Breakdown */}
               <div className="section-fade" style={{ animationDelay: '375ms' }}>
                 <EnergyFlowBreakdown data={balancedMeasurements} />
-              </div>
-              
-              {/* Rice Production Data Table */}
-              <div className="section-fade" style={{ animationDelay: '400ms' }}>
-                <RiceProductionTable data={riceData} />
               </div>
               
               {/* Circuit Energy Flow & Maintenance Alerts */}

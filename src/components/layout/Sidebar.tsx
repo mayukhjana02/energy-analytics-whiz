@@ -8,6 +8,7 @@ import {
   GaugeIcon,
   HomeIcon,
   FlaskConicalIcon,
+  GrainIcon,
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -38,6 +39,19 @@ const Sidebar = () => {
             <Link to="/">
               <HomeIcon className="mr-2 h-4 w-4" />
               Dashboard
+            </Link>
+          </Button>
+          
+          <Button
+            variant={isActive('/rice-production') ? 'secondary' : 'ghost'}
+            className={cn('w-full justify-start',
+              isActive('/rice-production') ? 'bg-secondary text-secondary-foreground' : ''
+            )}
+            asChild
+          >
+            <Link to="/rice-production">
+              <GrainIcon className="mr-2 h-4 w-4" />
+              Rice Production
             </Link>
           </Button>
           
