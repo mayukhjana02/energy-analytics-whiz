@@ -97,8 +97,16 @@ const EnergyFlowBreakdown: React.FC<EnergyFlowBreakdownProps> = ({ data, classNa
             <XAxis dataKey="name" />
             <YAxis unit=" kWh" />
             <Tooltip 
-              formatter={(value, name) => {
-                return [`${value.toFixed(1)} kWh`, name === 'useful' ? 'Useful Energy' : name === 'losses' ? 'Energy Losses' : 'Total Energy'];
+              formatter={(value: number | string, name: string) => {
+                // Handle the value properly based on its type
+                const formattedValue = typeof value === 'number' 
+                  ? `${value.toFixed(1)} kWh` 
+                  : `${value} kWh`;
+                
+                return [
+                  formattedValue, 
+                  name === 'useful' ? 'Useful Energy' : name === 'losses' ? 'Energy Losses' : 'Total Energy'
+                ];
               }}
               labelFormatter={(label) => `${label} Process`}
             />
