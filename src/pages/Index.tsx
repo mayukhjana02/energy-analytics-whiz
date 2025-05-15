@@ -12,7 +12,6 @@ import EnergySankeyDiagram from '@/components/dashboard/EnergySankeyDiagram';
 import EnergyFlowBreakdown from '@/components/dashboard/EnergyFlowBreakdown';
 import CircuitEnergyFlow from '@/components/dashboard/CircuitEnergyFlow';
 import MaintenanceAlerts from '@/components/dashboard/MaintenanceAlerts';
-import DataImportTool from '@/components/dashboard/DataImportTool';
 import { summaryMetrics } from '@/utils/mockData';
 import { initialRiceProductionData, generateUpdatedRiceData, createRiceMetricsData } from '@/utils/riceProductionData';
 import { generateSankeyData, generateCircuitModels, generateMaintenanceAlerts } from '@/utils/energyFlowData';
@@ -20,9 +19,6 @@ import { RiceProductionMetric } from '@/types/riceData';
 import { toast } from 'sonner';
 import { useEnergyData } from '@/hooks/useEnergyData';
 import { balanceEnergyReadings } from '@/utils/energyBalancer';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Upload, Database } from 'lucide-react';
 
 const Index = () => {
   // Use our hook for fetching energy data from Supabase
@@ -53,7 +49,6 @@ const Index = () => {
   const [sankeyData, setSankeyData] = useState(generateSankeyData());
   const [circuitModels, setCircuitModels] = useState(generateCircuitModels());
   const [maintenanceAlerts, setMaintenanceAlerts] = useState(generateMaintenanceAlerts());
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   // Effect for showing loading/success toasts
   useEffect(() => {
@@ -199,39 +194,6 @@ const Index = () => {
                   <p className="text-muted-foreground section-fade" style={{ animationDelay: '100ms' }}>
                     Monitor energy consumption, rice production metrics, and CBAM impact for rice processing operations.
                   </p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={refreshData}
-                    className="flex items-center gap-1"
-                  >
-                    <Database className="h-4 w-4" />
-                    Refresh Data
-                  </Button>
-                  
-                  <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="default"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        <Upload className="h-4 w-4" />
-                        Import Data
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[700px]">
-                      <DataImportTool 
-                        onImportComplete={() => {
-                          setIsImportDialogOpen(false);
-                          refreshData();
-                        }}
-                      />
-                    </DialogContent>
-                  </Dialog>
                 </div>
               </div>
               

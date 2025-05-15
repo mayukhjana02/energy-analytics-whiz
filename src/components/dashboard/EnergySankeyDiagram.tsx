@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Sankey, 
@@ -86,19 +86,23 @@ const CustomNode = (props: any) => {
 const CustomTooltip = (props: any) => {
   const { active, payload } = props;
 
-  if (active && payload && payload.length) {
+  if (active && payload && payload.length && payload[0] && payload[0].payload) {
     const data = payload[0].payload;
-    // Add null checks to prevent accessing properties of undefined
+    const sourceName = data.source && data.source.name ? data.source.name : "Unknown";
+    const targetName = data.target && data.target.name ? data.target.name : "Unknown";
+    const sourceCategory = data.source && data.source.category ? data.source.category : null;
+    const targetCategory = data.target && data.target.category ? data.target.category : null;
+
     return (
       <div className="bg-background border rounded shadow-lg p-3 text-sm">
-        <p className="font-semibold mb-1">{`${data.source?.name || ''} → ${data.target?.name || ''}`}</p>
+        <p className="font-semibold mb-1">{`${sourceName} → ${targetName}`}</p>
         {data.value !== undefined && (
           <div className="flex flex-col gap-1 mt-2">
             <p className="flex justify-between">
               <span>Energy flow:</span> 
               <span className="font-mono font-medium tabular-nums ml-2">{data.value.toFixed(2)} kWh</span>
             </p>
-            {data.source?.category === 'process' && data.target?.category === 'loss' && (
+            {sourceCategory === 'process' && targetCategory === 'loss' && (
               <p className="text-xs text-destructive mt-1">
                 Potential efficiency improvement opportunity
               </p>
@@ -113,7 +117,6 @@ const CustomTooltip = (props: any) => {
 };
 
 const EnergySankeyDiagram: React.FC<EnergySankeyDiagramProps> = ({ data, className }) => {
-  const [tooltipData, setTooltipData] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'all' | 'losses' | 'processes'>('all');
 
   // Calculate total energy input
@@ -144,56 +147,111 @@ const EnergySankeyDiagram: React.FC<EnergySankeyDiagramProps> = ({ data, classNa
 
   const lossPercentage = ((totalLoss / totalInput) * 100).toFixed(1);
   
-  // Filter data based on view mode
-  const filteredData = React.useMemo(() => {
+  // Filter data based on view mode - using useMemo to avoid recalculations
+  const filteredData = useMemo(() => {
     if (viewMode === 'all') {
       return data;
     }
     
+    // Create defensive copies to prevent mutations
+    const nodesCopy = [...data.nodes];
+    const linksCopy = [...data.links];
+    
     // For 'losses' mode, show only nodes that are sources, losses, or are connected to losses
     if (viewMode === 'losses') {
-      const lossNodeIndexes = data.nodes
+      // Find all loss node indexes
+      const lossNodeIndexes = nodesCopy
         .map((node, index) => node.category === 'loss' ? index : null)
         .filter(index => index !== null) as number[];
         
-      const relevantLinks = data.links.filter(link => 
-        lossNodeIndexes.includes(link.target) || 
-        lossNodeIndexes.some(lossIndex => 
-          data.links.some(l => l.target === lossIndex && l.source === link.source)
-        )
-      );
+      // Find links connected to loss nodes
+      const relevantLinks = linksCopy.filter(link => {
+        // Direct connections to loss nodes
+        if (lossNodeIndexes.includes(link.target)) {
+          return true;
+        }
+        
+        // Indirect connections (sources of nodes that connect to losses)
+        return lossNodeIndexes.some(lossIndex => 
+          linksCopy.some(l => l.target === lossIndex && l.source === link.source)
+        );
+      });
       
-      // Get all node indexes that should be shown
-      const relevantNodeIndexes = Array.from(new Set([
-        ...relevantLinks.map(link => link.source),
-        ...relevantLinks.map(link => link.target),
-      ]));
+      // Get all involved node indexes
+      const involvedNodeIndexes = new Set<number>();
+      
+      // Add source and target nodes from relevant links
+      relevantLinks.forEach(link => {
+        involvedNodeIndexes.add(link.source);
+        involvedNodeIndexes.add(link.target);
+      });
+      
+      // Create array from set of indexes
+      const relevantNodeIndexes = Array.from(involvedNodeIndexes);
+      
+      // Build new data object with filtered nodes and links
+      // Important: We need to create a mapping for the new node indexes
+      const filteredNodes = relevantNodeIndexes.map(index => nodesCopy[index]);
+      const indexMap = new Map<number, number>();
+      
+      relevantNodeIndexes.forEach((oldIndex, newIndex) => {
+        indexMap.set(oldIndex, newIndex);
+      });
+      
+      // Update link references using the index map
+      const filteredLinks = relevantLinks.map(link => ({
+        ...link,
+        source: indexMap.get(link.source) ?? 0,
+        target: indexMap.get(link.target) ?? 0
+      }));
       
       return {
-        nodes: data.nodes.filter((_, index) => relevantNodeIndexes.includes(index)),
-        links: relevantLinks
+        nodes: filteredNodes,
+        links: filteredLinks
       };
     }
     
     // For 'processes' mode, show only processing nodes and their connections
     if (viewMode === 'processes') {
-      const processNodeIndexes = data.nodes
+      const processNodeIndexes = nodesCopy
         .map((node, index) => node.category === 'process' ? index : null)
         .filter(index => index !== null) as number[];
         
-      const relevantLinks = data.links.filter(link => 
+      const relevantLinks = linksCopy.filter(link => 
         processNodeIndexes.includes(link.source) || processNodeIndexes.includes(link.target)
       );
       
-      // Get all node indexes that should be shown
-      const relevantNodeIndexes = Array.from(new Set([
-        ...relevantLinks.map(link => link.source),
-        ...relevantLinks.map(link => link.target),
-      ]));
+      // Get all involved node indexes
+      const involvedNodeIndexes = new Set<number>();
+      
+      // Add source and target nodes from relevant links
+      relevantLinks.forEach(link => {
+        involvedNodeIndexes.add(link.source);
+        involvedNodeIndexes.add(link.target);
+      });
+      
+      // Create array from set of indexes
+      const relevantNodeIndexes = Array.from(involvedNodeIndexes);
+      
+      // Build new data object with filtered nodes and links
+      // Important: We need to create a mapping for the new node indexes
+      const filteredNodes = relevantNodeIndexes.map(index => nodesCopy[index]);
+      const indexMap = new Map<number, number>();
+      
+      relevantNodeIndexes.forEach((oldIndex, newIndex) => {
+        indexMap.set(oldIndex, newIndex);
+      });
+      
+      // Update link references using the index map
+      const filteredLinks = relevantLinks.map(link => ({
+        ...link,
+        source: indexMap.get(link.source) ?? 0,
+        target: indexMap.get(link.target) ?? 0
+      }));
       
       return {
-        nodes: data.nodes.filter((_, index) => relevantNodeIndexes.includes(index)),
-        links: relevantLinks
+        nodes: filteredNodes,
+        links: filteredLinks
       };
     }
     
@@ -250,20 +308,36 @@ const EnergySankeyDiagram: React.FC<EnergySankeyDiagramProps> = ({ data, classNa
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-4 py-0 pt-2 pb-4 h-[450px]">
+      <CardContent className="px-4 py-0 pt-2 pb-4 h-[450px] bg-white">
         <div className="w-full h-full">
           <ResponsiveContainer width="100%" height="100%">
-            <Sankey
-              data={filteredData}
-              node={<CustomNode />}
-              link={{ stroke: '#d9d9d9' }}
-              margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-              nodeWidth={20}
-              nodePadding={60}
-            >
-              <Tooltip content={<CustomTooltip />} />
-              <Layer />
-            </Sankey>
+            {filteredData.nodes.length > 0 && filteredData.links.length > 0 ? (
+              <Sankey
+                data={filteredData}
+                node={<CustomNode />}
+                link={{ stroke: '#666' }}
+                margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                nodeWidth={20}
+                nodePadding={60}
+              >
+                <Tooltip content={<CustomTooltip />} />
+                <Layer />
+              </Sankey>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  <p>No energy flow data available for this view</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-4" 
+                    onClick={() => setViewMode('all')}
+                  >
+                    View All Flows
+                  </Button>
+                </div>
+              </div>
+            )}
           </ResponsiveContainer>
         </div>
         

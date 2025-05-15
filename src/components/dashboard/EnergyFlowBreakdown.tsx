@@ -82,7 +82,7 @@ const EnergyFlowBreakdown: React.FC<EnergyFlowBreakdownProps> = ({ data, classNa
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="px-2 py-4 h-[350px]">
+      <CardContent className="px-2 py-4 h-[350px] bg-white">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={processData}
@@ -93,15 +93,14 @@ const EnergyFlowBreakdown: React.FC<EnergyFlowBreakdownProps> = ({ data, classNa
               bottom: 5,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis unit=" kWh" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+            <XAxis dataKey="name" axisLine={{ stroke: '#ccc' }} tickLine={{ stroke: '#ccc' }} />
+            <YAxis unit=" kWh" axisLine={{ stroke: '#ccc' }} tickLine={{ stroke: '#ccc' }} />
             <Tooltip 
-              formatter={(value: number | string, name: string) => {
-                // Handle the value properly based on its type
-                const formattedValue = typeof value === 'number' 
-                  ? `${value.toFixed(1)} kWh` 
-                  : `${value} kWh`;
+              formatter={(value: any, name: string) => {
+                // Handle the value safely - ensure it's a number first
+                const numValue = typeof value === 'number' ? value : parseFloat(value);
+                const formattedValue = isNaN(numValue) ? value : `${numValue.toFixed(1)} kWh`;
                 
                 return [
                   formattedValue, 
@@ -109,6 +108,7 @@ const EnergyFlowBreakdown: React.FC<EnergyFlowBreakdownProps> = ({ data, classNa
                 ];
               }}
               labelFormatter={(label) => `${label} Process`}
+              contentStyle={{ backgroundColor: 'white', border: '1px solid #ccc' }}
             />
             <Legend 
               payload={[

@@ -48,7 +48,7 @@ const metricOptions: {
 const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass-card p-3 border shadow-sm text-xs">
+      <div className="bg-background border border-border p-3 shadow-sm text-xs">
         <p className="mb-1 font-medium">{formatTimestamp(label, 'datetime')}</p>
         {payload.map((entry, index) => (
           <div key={`tooltip-${index}`} className="flex justify-between items-center gap-4 my-1">
@@ -84,8 +84,27 @@ const ConsumptionChart: React.FC<ConsumptionChartProps> = ({ data, className }) 
     return aggregateMeasurements(filteredData, aggregation);
   }, [filteredData, timeRange]);
 
-  // Prepare data for charting
+  // Prepare data for charting with a default value
   const chartData = useMemo(() => {
+    // If we have no data, create a simple dummy dataset for visualization
+    if (aggregatedData.length === 0) {
+      const now = new Date();
+      return Array.from({ length: 24 }).map((_, i) => {
+        const timestamp = new Date(now.getTime() - (24 - i) * 60 * 60 * 1000).toISOString();
+        return {
+          timestamp,
+          formattedTime: formatTimestamp(timestamp, 'time'),
+          activePower: Math.random() * 100 + 50,
+          voltage: Math.random() * 10 + 220,
+          current: Math.random() * 5 + 10,
+          powerFactor: Math.random() * 0.2 + 0.8,
+          carbonEmissions: Math.random() * 20 + 30,
+          cbamFactor: Math.random() * 10 + 70,
+          humidity: Math.random() * 15 + 60
+        };
+      });
+    }
+    
     return prepareChartData(aggregatedData, [
       'timestamp', 'activePower', 'voltage', 'current', 'powerFactor', 
       'carbonEmissions', 'cbamFactor', 'humidity'
@@ -150,7 +169,7 @@ const ConsumptionChart: React.FC<ConsumptionChartProps> = ({ data, className }) 
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-4 px-2 md:px-4 h-[350px]">
+      <CardContent className="pt-4 px-2 md:px-4 h-[350px] bg-white">
         <ResponsiveContainer width="100%" height="100%">
           {chartType === 'area' ? (
             <AreaChart
@@ -172,15 +191,19 @@ const ConsumptionChart: React.FC<ConsumptionChartProps> = ({ data, className }) 
                   </linearGradient>
                 ))}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+              <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.5} stroke="#ccc" />
               <XAxis
                 dataKey="formattedTime"
                 tick={{ fontSize: 11 }}
                 tickMargin={10}
-                axisLine={{ strokeOpacity: 0.2 }}
-                tickLine={{ strokeOpacity: 0.2 }}
+                axisLine={{ stroke: '#ccc' }}
+                tickLine={{ stroke: '#ccc' }}
               />
-              <YAxis hide={true} />
+              <YAxis 
+                axisLine={{ stroke: '#ccc' }} 
+                tickLine={{ stroke: '#ccc' }}
+                tick={{ fontSize: 11, fill: '#333' }}
+              />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
               
@@ -204,15 +227,19 @@ const ConsumptionChart: React.FC<ConsumptionChartProps> = ({ data, className }) 
               data={chartData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+              <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.5} stroke="#ccc" />
               <XAxis
                 dataKey="formattedTime"
                 tick={{ fontSize: 11 }}
                 tickMargin={10}
-                axisLine={{ strokeOpacity: 0.2 }}
-                tickLine={{ strokeOpacity: 0.2 }}
+                axisLine={{ stroke: '#ccc' }}
+                tickLine={{ stroke: '#ccc' }}
               />
-              <YAxis hide={true} />
+              <YAxis 
+                axisLine={{ stroke: '#ccc' }} 
+                tickLine={{ stroke: '#ccc' }}
+                tick={{ fontSize: 11, fill: '#333' }}
+              />
               <Tooltip content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
               

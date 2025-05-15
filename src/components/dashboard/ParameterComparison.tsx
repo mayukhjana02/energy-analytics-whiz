@@ -13,7 +13,6 @@ import {
   Label
 } from 'recharts';
 import { EnergyMeasurement } from '@/utils/mockData';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -43,7 +42,7 @@ const parameters = [
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass-card p-3 border shadow-sm text-xs">
+      <div className="bg-background border border-border p-3 shadow-sm text-xs">
         <p className="font-medium mb-1">Correlation Data</p>
         <p>
           {payload[0]?.name}: {payload[0]?.value} {payload[0]?.unit}
@@ -65,12 +64,25 @@ const ParameterComparison: React.FC<ParameterComparisonProps> = ({ data, classNa
   const [xParam, setXParam] = useState('powerFactor');
   const [yParam, setYParam] = useState('activePower');
   
-  // Prepare data for the scatter plot
-  const scatterData = data.map(item => ({
+  // Generate sample data if the actual data is empty
+  let scatterData = data.length > 0 ? data.map(item => ({
     timestamp: item.timestamp,
-    [xParam]: item[xParam as keyof EnergyMeasurement],
-    [yParam]: item[yParam as keyof EnergyMeasurement],
-  }));
+    [xParam]: item[xParam as keyof EnergyMeasurement] || 0,
+    [yParam]: item[yParam as keyof EnergyMeasurement] || 0,
+  })) : [];
+  
+  // If we have no real data, create dummy scatter data
+  if (scatterData.length === 0) {
+    const now = new Date();
+    scatterData = Array.from({ length: 50 }).map((_, i) => {
+      const timestamp = new Date(now.getTime() - Math.random() * 24 * 60 * 60 * 1000).toISOString();
+      return {
+        timestamp,
+        [xParam]: Math.random() * 0.5 + 0.5, // Power factor between 0.5 and 1.0
+        [yParam]: Math.random() * 100 + 50, // Active power between 50 and 150 kW
+      };
+    });
+  }
   
   const xParamInfo = parameters.find(p => p.id === xParam);
   const yParamInfo = parameters.find(p => p.id === yParam);
@@ -91,7 +103,7 @@ const ParameterComparison: React.FC<ParameterComparisonProps> = ({ data, classNa
                 <SelectTrigger className="w-[120px] h-8 text-xs">
                   <SelectValue placeholder="Select parameter" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border border-border">
                   {parameters.map(param => (
                     <SelectItem key={param.id} value={param.id} className="text-xs">
                       {param.name}
@@ -108,7 +120,7 @@ const ParameterComparison: React.FC<ParameterComparisonProps> = ({ data, classNa
                 <SelectTrigger className="w-[120px] h-8 text-xs">
                   <SelectValue placeholder="Select parameter" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border border-border">
                   {parameters.map(param => (
                     <SelectItem key={param.id} value={param.id} className="text-xs">
                       {param.name}
@@ -120,24 +132,24 @@ const ParameterComparison: React.FC<ParameterComparisonProps> = ({ data, classNa
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-4 px-2 md:px-4 h-[350px]">
+      <CardContent className="pt-4 px-2 md:px-4 h-[350px] bg-white">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart
             margin={{ top: 20, right: 30, bottom: 40, left: 30 }}
           >
-            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.5} stroke="#ccc" />
             <XAxis 
               type="number" 
               dataKey={xParam} 
               name={xParamInfo?.name}
               unit={xParamInfo?.unit}
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 11, fill: '#333' }}
               tickMargin={10}
-              axisLine={{ strokeOpacity: 0.2 }}
-              tickLine={{ strokeOpacity: 0.2 }}
+              axisLine={{ stroke: '#ccc' }}
+              tickLine={{ stroke: '#ccc' }}
             >
               <Label 
-                value={`${xParamInfo?.name} (${xParamInfo?.unit})`} 
+                value={`${xParamInfo?.name} (${xParamInfo?.unit || ''})`} 
                 position="bottom" 
                 offset={20}
                 style={{ textAnchor: 'middle', fontSize: '12px', fill: '#64748b' }}
@@ -148,13 +160,13 @@ const ParameterComparison: React.FC<ParameterComparisonProps> = ({ data, classNa
               dataKey={yParam} 
               name={yParamInfo?.name}
               unit={yParamInfo?.unit}
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 11, fill: '#333' }}
               tickMargin={10}
-              axisLine={{ strokeOpacity: 0.2 }}
-              tickLine={{ strokeOpacity: 0.2 }}
+              axisLine={{ stroke: '#ccc' }}
+              tickLine={{ stroke: '#ccc' }}
             >
               <Label 
-                value={`${yParamInfo?.name} (${yParamInfo?.unit})`} 
+                value={`${yParamInfo?.name} (${yParamInfo?.unit || ''})`} 
                 angle={-90} 
                 position="left" 
                 offset={0}
