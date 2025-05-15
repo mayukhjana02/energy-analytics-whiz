@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner'; // Use sonner toast directly
-import { mockData, generateMockData } from '@/utils/mockData';
+import { mockData, generateMockData, EnergyMeasurement, EnergyIncident } from '@/utils/mockData';
 import { adaptEnergyMetricsToMeasurements, adaptEnergyIncidents } from '@/utils/dataAdapters';
-import { EnergyMeasurement, EnergyIncident } from '@/utils/mockData';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UseEnergyDataOptions {
@@ -52,6 +51,25 @@ export function useEnergyData(options: UseEnergyDataOptions = {}) {
     };
   };
 
+  // Generate sample data for development when no real data exists
+  const generateSampleData = () => {
+    const fallbackData = generateMockData();
+    // Ensure we have enough technical loss data
+    const enhancedMeasurements = fallbackData.consumptionPoints[0].measurements.map(m => ({
+      ...m,
+      transformerLosses: m.activePower * 0.032, // 3.2% of active power
+      lineLosses: m.activePower * 0.022, // 2.2% of active power
+      connectionLosses: m.activePower * 0.012, // 1.2% of active power
+      otherLosses: m.activePower * 0.008, // 0.8% of active power
+    }));
+    
+    return {
+      measurements: enhancedMeasurements,
+      incidents: fallbackData.incidents,
+      optimizations: []
+    };
+  };
+
   // Fetch data from Supabase
   const fetchData = async () => {
     try {
@@ -90,10 +108,23 @@ export function useEnergyData(options: UseEnergyDataOptions = {}) {
       const adaptedMeasurements = adaptEnergyMetricsToMeasurements(metricsData || []);
       const adaptedIncidents = adaptEnergyIncidents(incidentsData || []);
       
-      setMeasurements(adaptedMeasurements);
-      setIncidents(adaptedIncidents);
-      setOptimizations(optimizationsData || []);
-      setError(null);
+      if (adaptedMeasurements.length > 0) {
+        setMeasurements(adaptedMeasurements);
+        setIncidents(adaptedIncidents);
+        setOptimizations(optimizationsData || []);
+        setError(null);
+      } else if (useFallbackData) {
+        // If no data is returned but fallback is enabled, use sample data
+        const sampleData = generateSampleData();
+        setMeasurements(sampleData.measurements);
+        setIncidents(sampleData.incidents);
+        setOptimizations(sampleData.optimizations);
+        toast.info('Using sample data - No records found in database');
+      } else {
+        // No data and no fallback, show a warning
+        toast.warning('No energy data found for the selected time range');
+        setMeasurements([]);
+      }
 
       // Log success
       console.log(`Successfully fetched ${adaptedMeasurements.length} measurements, ${adaptedIncidents.length} incidents from Supabase`);
@@ -104,9 +135,10 @@ export function useEnergyData(options: UseEnergyDataOptions = {}) {
       // Use fallback data if Supabase fails and fallback is enabled
       if (useFallbackData) {
         console.warn('Using fallback data due to Supabase error:', err);
-        const fallbackData = generateMockData();
-        setMeasurements(fallbackData.consumptionPoints[0].measurements);
-        setIncidents(fallbackData.incidents);
+        const sampleData = generateSampleData();
+        setMeasurements(sampleData.measurements);
+        setIncidents(sampleData.incidents);
+        setOptimizations(sampleData.optimizations);
         toast.error('Using offline data - Connection to Supabase failed');
       }
     } finally {
