@@ -3,10 +3,18 @@ import React from 'react';
 import { BellIcon, Settings, Wheat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 const Header: React.FC = () => {
-  return <header className="w-full bg-white/80 backdrop-blur-md z-10 border-b border-border sticky top-0 animate-fade-in">
+  return (
+    <header className="w-full bg-white/80 backdrop-blur-md z-10 border-b border-border sticky top-0 animate-fade-in">
       <div className="container h-16 flex items-center justify-between px-4 md:px-6">
         <div className="flex items-center space-x-2">
           <Wheat className="h-5 w-5 text-green-600" />
@@ -50,6 +58,8 @@ const Header: React.FC = () => {
           </div>
         </div>
       </div>
-    </header>;
+    </header>
+  );
 };
+
 export default Header;

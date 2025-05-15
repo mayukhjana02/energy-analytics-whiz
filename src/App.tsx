@@ -9,13 +9,12 @@ import NotFound from "./pages/NotFound";
 import PhysicsOptimization from "./pages/PhysicsOptimization";
 import ConsumptionAnalytics from "./pages/ConsumptionAnalytics";
 
+// Create a client
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner position="top-right" closeButton={true} />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -25,6 +24,8 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      <Toaster />
+      <Sonner position="top-right" closeButton={true} />
     </TooltipProvider>
   </QueryClientProvider>
 );
