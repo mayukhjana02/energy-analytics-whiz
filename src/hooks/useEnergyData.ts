@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner'; // Use sonner toast directly instead of our wrapper
 import { mockData, generateMockData } from '@/utils/mockData';
 import { adaptEnergyMetricsToMeasurements, adaptEnergyIncidents } from '@/utils/dataAdapters';
 import { EnergyMeasurement, EnergyIncident } from '@/utils/mockData';
@@ -14,7 +14,6 @@ interface UseEnergyDataOptions {
 
 export function useEnergyData(options: UseEnergyDataOptions = {}) {
   const { useFallbackData = true, pollingInterval = 30000, timeRange = 'day' } = options;
-  const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -108,11 +107,7 @@ export function useEnergyData(options: UseEnergyDataOptions = {}) {
         const fallbackData = generateMockData();
         setMeasurements(fallbackData.consumptionPoints[0].measurements);
         setIncidents(fallbackData.incidents);
-        toast({
-          title: 'Using offline data',
-          description: 'Connection to Supabase failed. Using cached data.',
-          variant: 'destructive'
-        });
+        toast.error('Using offline data - Connection to Supabase failed');
       }
     } finally {
       setLoading(false);
